@@ -19,4 +19,4 @@ export function buildGmailQuery(): string {
 }
 
 /** Skip emails with very short bodies */
-export const MIN_BODY_LENGTH = 50;
+export const MIN_BODY_LENGTH = 5;
