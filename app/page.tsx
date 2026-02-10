@@ -32,7 +32,7 @@ export default function Home() {
           <div className="space-y-4">
             <p className="text-green-600 dark:text-green-500">Configured</p>
             <p className="text-sm text-zinc-500">
-              To disconnect, remove <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">GOOGLE_REFRESH_TOKEN</code> from your environment and restart.
+              To disconnect, remove the relevant <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">GOOGLE_REFRESH_TOKEN</code> from your environment and restart.
             </p>
           </div>
         )}

@@ -1,10 +1,22 @@
 import { google } from "googleapis";
 import { buildGmailQuery, MIN_BODY_LENGTH } from "./filters";
 
-function getOAuth2Client(): InstanceType<typeof google.auth.OAuth2> | null {
+const MAX_ACCOUNTS = 5;
+
+function getRefreshTokenVar(accountId: number): string {
+  return accountId === 1 ? "GOOGLE_REFRESH_TOKEN" : `GOOGLE_REFRESH_TOKEN_${accountId}`;
+}
+
+function getRefreshToken(accountId: number): string | undefined {
+  return process.env[getRefreshTokenVar(accountId)];
+}
+
+function getOAuth2Client(
+  accountId: number
+): InstanceType<typeof google.auth.OAuth2> | null {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+  const refreshToken = getRefreshToken(accountId);
 
   if (!clientId || !clientSecret || !refreshToken) {
     return null;
@@ -20,6 +32,14 @@ function getOAuth2Client(): InstanceType<typeof google.auth.OAuth2> | null {
   return oauth2Client;
 }
 
+export function getConfiguredAccountIds(): number[] {
+  const ids: number[] = [];
+  for (let i = 1; i <= MAX_ACCOUNTS; i++) {
+    if (getRefreshToken(i)) ids.push(i);
+  }
+  return ids;
+}
+
 export interface EmailMessage {
   id: string;
   from: string;
@@ -27,8 +47,10 @@ export interface EmailMessage {
   body: string;
 }
 
-export async function listUnreadMessageIds(): Promise<string[]> {
-  const auth = getOAuth2Client();
+export async function listUnreadMessageIds(
+  accountId: number
+): Promise<string[]> {
+  const auth = getOAuth2Client(accountId);
   if (!auth) return [];
 
   const gmail = google.gmail({ version: "v1", auth });
@@ -45,8 +67,11 @@ export async function listUnreadMessageIds(): Promise<string[]> {
   return ids.filter(Boolean);
 }
 
-export async function getMessage(id: string): Promise<EmailMessage | null> {
-  const auth = getOAuth2Client();
+export async function getMessage(
+  id: string,
+  accountId: number
+): Promise<EmailMessage | null> {
+  const auth = getOAuth2Client(accountId);
   if (!auth) return null;
 
   const gmail = google.gmail({ version: "v1", auth });
@@ -87,9 +112,9 @@ export async function getMessage(id: string): Promise<EmailMessage | null> {
 }
 
 export function isGmailConfigured(): boolean {
-  return !!(
-    process.env.GOOGLE_CLIENT_ID &&
-    process.env.GOOGLE_CLIENT_SECRET &&
-    process.env.GOOGLE_REFRESH_TOKEN
+  return (
+    !!process.env.GOOGLE_CLIENT_ID &&
+    !!process.env.GOOGLE_CLIENT_SECRET &&
+    getConfiguredAccountIds().length > 0
   );
 }

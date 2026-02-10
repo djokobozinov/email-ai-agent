@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { listUnreadMessageIds, getMessage, isGmailConfigured } from "@/lib/gmail";
+import {
+  getConfiguredAccountIds,
+  listUnreadMessageIds,
+  getMessage,
+  isGmailConfigured,
+} from "@/lib/gmail";
 import { summarizeEmail } from "@/lib/summarizer";
 import { sendToTelegram } from "@/lib/telegram";
 
@@ -29,30 +34,36 @@ export async function POST(request: NextRequest) {
   }
 
   let processed = 0;
-  let ids: string[] = [];
+  const accountIds = getConfiguredAccountIds();
 
-  try {
-    ids = await listUnreadMessageIds();
-  } catch (err) {
-    console.error("Gmail list error:", err instanceof Error ? err.message : "Unknown");
-    return NextResponse.json(
-      { error: "Failed to list emails. Check Gmail configuration." },
-      { status: 500 }
-    );
-  }
-
-  for (const id of ids) {
+  for (const accountId of accountIds) {
+    let ids: string[] = [];
     try {
-      const email = await getMessage(id);
-      if (!email) continue;
-
-      const summary = await summarizeEmail(email);
-      if (!summary || summary.bullets.length === 0) continue;
-
-      const sent = await sendToTelegram(email, summary);
-      if (sent) processed++;
+      ids = await listUnreadMessageIds(accountId);
     } catch (err) {
-      console.error("Email processing error:", err instanceof Error ? err.message : "Unknown");
+      console.error(
+        `Gmail list error (account ${accountId}):`,
+        err instanceof Error ? err.message : "Unknown"
+      );
+      continue;
+    }
+
+    for (const id of ids) {
+      try {
+        const email = await getMessage(id, accountId);
+        if (!email) continue;
+
+        const summary = await summarizeEmail(email);
+        if (!summary || summary.bullets.length === 0) continue;
+
+        const sent = await sendToTelegram(email, summary);
+        if (sent) processed++;
+      } catch (err) {
+        console.error(
+          "Email processing error:",
+          err instanceof Error ? err.message : "Unknown"
+        );
+      }
     }
   }
 
