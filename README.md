@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Email → Summary → Telegram
 
-## Getting Started
+Automated agent that reads new Gmail, summarizes each via OpenAI, and sends to Telegram. Minimal web UI for setup only. All configuration via environment variables; no database.
 
-First, run the development server:
+## Features
+
+- Gmail API (OAuth2, read-only)
+- OpenAI summarization (1 title + 2–3 bullets per email)
+- Telegram delivery
+- Cron-based scheduling (e.g. every 6 hours)
+- Minimal mobile-friendly UI for Gmail setup
+
+## Setup
+
+### 1. Google Cloud (Gmail API)
+
+1. Create a project in [Google Cloud Console](https://console.cloud.google.com)
+2. Enable **Gmail API**
+3. Configure OAuth consent screen (External, add your email as test user)
+4. Create OAuth 2.0 credentials (Desktop app or Web application)
+5. Add redirect URI: `https://your-domain.com/api/auth/gmail` (or `http://localhost:3000/api/auth/gmail` for local dev)
+
+### 2. Telegram Bot
+
+1. Message [@BotFather](https://t.me/BotFather) to create a bot; copy the token
+2. Message [@userinfobot](https://t.me/userinfobot) to get your chat ID
+
+### 3. Environment Variables
+
+Copy `.env.example` to `.env` and fill in:
+
+| Variable | Description |
+|----------|-------------|
+| `GOOGLE_CLIENT_ID` | From Google Cloud OAuth credentials |
+| `GOOGLE_CLIENT_SECRET` | From Google Cloud OAuth credentials |
+| `GOOGLE_REFRESH_TOKEN` | From one-time OAuth flow (see below) |
+| `APP_URL` | Full URL of your app (e.g. `https://your-domain.com`) |
+| `OPENAI_API_KEY` | OpenAI API key |
+| `TELEGRAM_BOT_TOKEN` | From BotFather |
+| `TELEGRAM_CHAT_ID` | Your Telegram chat ID |
+| `CRON_SECRET` | Min 16 chars; used to protect the cron endpoint |
+
+Optional: `MAX_EMAILS_PER_RUN` (default 5), `LABEL_FILTER` (e.g. `IMPORTANT`)
+
+### 4. Get Gmail Refresh Token
+
+1. Run the app: `npm run dev`
+2. Open the UI and click **Setup Gmail**
+3. Complete the Google OAuth flow
+4. Copy the displayed refresh token into `.env` as `GOOGLE_REFRESH_TOKEN`
+5. Restart the app
+
+### 5. Disconnect
+
+To remove Gmail access, delete `GOOGLE_REFRESH_TOKEN` from your environment and restart.
+
+## Running
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev    # Development
+npm run build && npm start   # Production
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scheduling
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Vercel Cron**: Deploy to Vercel; cron runs every 6 hours. Set `CRON_SECRET` in Vercel env.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**External cron**: Call `GET /api/cron/process` with header:
+```
+Authorization: Bearer YOUR_CRON_SECRET
+```
 
-## Learn More
+Example (system cron, every 6 hours):
+```bash
+0 */6 * * * curl -H "Authorization: Bearer $CRON_SECRET" https://your-domain.com/api/cron/process
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Filtering
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Processes unread inbox only
+- Skips: spam, promotions, social
+- Skips very short emails (< 50 chars)
+- Optional: set `LABEL_FILTER=IMPORTANT` to process only important label
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## License
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
