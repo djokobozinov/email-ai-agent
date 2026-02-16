@@ -8,7 +8,7 @@ Automated agent that reads new Gmail, summarizes each via OpenAI, and sends to T
 - Up to 5 Gmail accounts (same client ID/secret)
 - OpenAI summarization (1 title + 2–3 bullets per email)
 - Telegram delivery
-- Cron-based scheduling (e.g. every 2 hours)
+- Cron-based scheduling (hourly)
 - Minimal mobile-friendly UI for Gmail setup
 
 ## Setup
@@ -73,16 +73,16 @@ npm run build && npm start   # Production
 
 ## Scheduling
 
-**Vercel Cron**: Deploy to Vercel; cron runs every 2 hours. Set `CRON_SECRET` in Vercel env.
+**Vercel Cron**: Deploy to Vercel; cron runs every hour. Set `CRON_SECRET` in Vercel env.
 
 **External cron**: Call `GET /api/cron/process` with header:
 ```
 Authorization: Bearer YOUR_CRON_SECRET
 ```
 
-Example (system cron, every 2 hours):
+Example (system cron, every hour):
 ```bash
-0 */2 * * * curl -H "Authorization: Bearer $CRON_SECRET" https://your-domain.com/api/cron/process
+0 * * * * curl -H "Authorization: Bearer $CRON_SECRET" https://your-domain.com/api/cron/process
 ```
 
 ## Filtering
