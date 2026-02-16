@@ -2,11 +2,18 @@ import type { Summary } from "./summarizer";
 import type { EmailMessage } from "./gmail";
 
 function formatMessage(email: EmailMessage, summary: Summary): string {
+  if (summary.isReceipt) {
+    return `${email.from}
+${email.subject}
+
+${summary.title}`.trim();
+  }
   const bullets = summary.bullets
     .map((b) => `– ${b}`)
     .join("\n");
   return `${email.from}
 ${email.subject}
+
 ${bullets}`.trim();
 }
 

@@ -54,7 +54,11 @@ export async function POST(request: NextRequest) {
         if (!email) continue;
 
         const summary = await summarizeEmail(email);
-        if (!summary || summary.bullets.length === 0) continue;
+        if (
+          !summary ||
+          (summary.bullets.length === 0 && !summary.isReceipt)
+        )
+          continue;
 
         const sent = await sendToTelegram(email, summary);
         if (sent) processed++;
