@@ -1,5 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import { generateText, Output } from "ai";
+import { generateText, Output, zodSchema } from "ai";
 import { z } from "zod";
 import type { EmailMessage } from "./gmail";
 
@@ -34,23 +34,31 @@ export async function summarizeEmail(email: EmailMessage): Promise<Summary | nul
   const content = `From: ${email.from}\nSubject: ${email.subject}\n\n${email.body.slice(0, 8000)}`;
 
   try {
-    const { output } = await generateText({
+    const result = await generateText({
       model: openai("gpt-4o-mini"),
       system: SYSTEM_PROMPT,
       prompt: content,
       output: Output.object({
-        schema: summarySchema,
+        schema: zodSchema(summarySchema),
       }),
     });
 
-    if (!output) return null;
+    const output = result.output;
+    if (!output) {
+      console.error("Summarizer: generateText returned no output");
+      return null;
+    }
 
     return {
       title: output.title ?? "No title",
       bullets: Array.isArray(output.bullets) ? output.bullets : [],
       isReceipt: output.isReceipt === true,
     };
-  } catch {
+  } catch (err) {
+    console.error("Summarizer error:", err instanceof Error ? err.message : err);
+    if (err instanceof Error && err.cause) {
+      console.error("Cause:", err.cause);
+    }
     return null;
   }
 }
