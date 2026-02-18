@@ -73,23 +73,24 @@ npm run build && npm start   # Production
 
 ## Scheduling
 
-**Vercel Cron**: Deploy to Vercel; cron runs every 2 hours. Set `CRON_SECRET` in Vercel env.
+**Vercel Cron**: Deploy to Vercel; cron runs every 30 minutes. Set `CRON_SECRET` in Vercel env.
 
 **External cron**: Call `GET /api/cron/process` with header:
 ```
 Authorization: Bearer YOUR_CRON_SECRET
 ```
 
-Example (system cron, every 2 hours):
+Example (system cron, every 30 minutes):
 ```bash
-0 */2 * * * curl -H "Authorization: Bearer $CRON_SECRET" https://your-domain.com/api/cron/process
+*/30 * * * * curl -H "Authorization: Bearer $CRON_SECRET" https://your-domain.com/api/cron/process
 ```
 
 ## Filtering
 
-- Processes unread inbox only
-- Skips: spam, promotions, social
+- Processes unread inbox, social, and promotions
+- Skips: spam only
 - Skips very short emails (< 5 chars)
+- Social emails show 👥 prefix; promotions show 🏷️ prefix
 - Optional: set `LABEL_FILTER=IMPORTANT` to process only important label
 
 ## License

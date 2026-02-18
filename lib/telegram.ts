@@ -1,9 +1,20 @@
 import type { Summary } from "./summarizer";
 import type { EmailMessage } from "./gmail";
 
+const CATEGORY_SOCIAL = "CATEGORY_SOCIAL";
+const CATEGORY_PROMOTIONS = "CATEGORY_PROMOTIONS";
+
+function getCategoryEmoji(email: EmailMessage): string {
+  const labels = email.labelIds ?? [];
+  if (labels.includes(CATEGORY_SOCIAL)) return "👥 ";
+  if (labels.includes(CATEGORY_PROMOTIONS)) return "🏷️ ";
+  return "";
+}
+
 function formatMessage(email: EmailMessage, summary: Summary): string {
+  const prefix = getCategoryEmoji(email);
   if (summary.isReceipt) {
-    return `${email.from}
+    return `${prefix}${email.from}
 ${email.subject}
 
 ${summary.title}`.trim();
@@ -11,7 +22,7 @@ ${summary.title}`.trim();
   const bullets = summary.bullets
     .map((b) => `– ${b}`)
     .join("\n");
-  return `${email.from}
+  return `${prefix}${email.from}
 ${email.subject}
 
 ${bullets}`.trim();

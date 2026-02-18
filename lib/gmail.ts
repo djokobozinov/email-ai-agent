@@ -45,6 +45,7 @@ export interface EmailMessage {
   from: string;
   subject: string;
   body: string;
+  labelIds?: string[];
 }
 
 export async function listUnreadMessageIds(
@@ -108,7 +109,9 @@ export async function getMessage(
     return null;
   }
 
-  return { id, from, subject, body };
+  const labelIds = res.data.labelIds ?? [];
+
+  return { id, from, subject, body, labelIds };
 }
 
 export function isGmailConfigured(): boolean {
