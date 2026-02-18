@@ -49,11 +49,13 @@ export async function POST(request: NextRequest) {
     }
 
     for (const id of ids) {
+      console.log("Processing email:", id);
       try {
         const email = await getMessage(id, accountId);
         if (!email) continue;
 
         const summary = await summarizeEmail(email);
+        console.log("Summary:", summary);
         if (
           !summary ||
           (summary.bullets.length === 0 && !summary.isReceipt)
