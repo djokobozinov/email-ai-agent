@@ -73,26 +73,16 @@ npm run build && npm start   # Production
 
 ## Scheduling
 
-<<<<<<< HEAD
 **Vercel Cron**: Deploy to Vercel; cron runs every 30 minutes. Set `CRON_SECRET` in Vercel env.
-=======
-**Vercel Cron**: Deploy to Vercel; cron runs every hour. Set `CRON_SECRET` in Vercel env.
->>>>>>> cb641ae035b8a360bf9ae6ae4e30293652241228
 
 **External cron**: Call `GET /api/cron/process` with header:
 ```
 Authorization: Bearer YOUR_CRON_SECRET
 ```
 
-<<<<<<< HEAD
 Example (system cron, every 30 minutes):
 ```bash
 */30 * * * * curl -H "Authorization: Bearer $CRON_SECRET" https://your-domain.com/api/cron/process
-=======
-Example (system cron, every hour):
-```bash
-0 * * * * curl -H "Authorization: Bearer $CRON_SECRET" https://your-domain.com/api/cron/process
->>>>>>> cb641ae035b8a360bf9ae6ae4e30293652241228
 ```
 
 ## Filtering
