@@ -8,7 +8,7 @@ Automated agent that reads new Gmail, summarizes each via OpenAI, and sends to T
 - Up to 5 Gmail accounts (same client ID/secret)
 - OpenAI summarization (1 title + 2–3 bullets per email)
 - Telegram delivery
-- Cron-based scheduling (hourly)
+- Cron-based scheduling (every 30 minutes)
 - Minimal mobile-friendly UI for Gmail setup
 
 ## Setup
