@@ -20,7 +20,7 @@ Rules:
 const summarySchema = z.object({
   title: z.string(),
   bullets: z.array(z.string()),
-  isReceipt: z.boolean().optional(),
+  isReceipt: z.boolean(),
 });
 
 export type Summary = z.infer<typeof summarySchema>;
