@@ -1,4 +1,6 @@
-import OpenAI from "openai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { generateText, Output } from "ai";
+import { z } from "zod";
 import type { EmailMessage } from "./gmail";
 
 const SYSTEM_PROMPT = `You summarize emails factually and concisely. Output valid JSON only.
@@ -15,42 +17,38 @@ Rules:
 - If email is empty, promotional, or has no meaningful content, return:
   {"title": "No meaningful content to summarize", "bullets": [], "isReceipt": false}`;
 
-export interface Summary {
-  title: string;
-  bullets: string[];
-  isReceipt?: boolean;
-}
+const summarySchema = z.object({
+  title: z.string(),
+  bullets: z.array(z.string()),
+  isReceipt: z.boolean().optional(),
+});
+
+export type Summary = z.infer<typeof summarySchema>;
 
 export async function summarizeEmail(email: EmailMessage): Promise<Summary | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
 
-  const client = new OpenAI({ apiKey });
+  const openai = createOpenAI({ apiKey });
 
   const content = `From: ${email.from}\nSubject: ${email.subject}\n\n${email.body.slice(0, 8000)}`;
 
   try {
-    const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content },
-      ],
-      response_format: { type: "json_object" },
+    const { output } = await generateText({
+      model: openai("gpt-4o-mini"),
+      system: SYSTEM_PROMPT,
+      prompt: content,
+      output: Output.object({
+        schema: summarySchema,
+      }),
     });
 
-    const text = completion.choices[0]?.message?.content;
-    if (!text) return null;
+    if (!output) return null;
 
-    const parsed = JSON.parse(text) as {
-      title?: string;
-      bullets?: string[];
-      isReceipt?: boolean;
-    };
     return {
-      title: parsed.title ?? "No title",
-      bullets: Array.isArray(parsed.bullets) ? parsed.bullets : [],
-      isReceipt: parsed.isReceipt === true,
+      title: output.title ?? "No title",
+      bullets: Array.isArray(output.bullets) ? output.bullets : [],
+      isReceipt: output.isReceipt === true,
     };
   } catch {
     return null;
