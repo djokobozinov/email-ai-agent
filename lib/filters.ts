@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /** Number of minutes to look back for emails (matches cron interval) */
 const LOOKBACK_MINUTES = 30;
 
@@ -5,6 +6,15 @@ const LOOKBACK_MINUTES = 30;
  * Builds Gmail query for filtering unread emails.
  * Process inbox, social, promotions; skip spam only.
  * Only emails from the last 30 minutes (uses epoch timestamp for precise time filter).
+=======
+/** Number of hours to look back for emails (matches cron interval) */
+const LOOKBACK_HOURS = 1;
+
+/**
+ * Builds Gmail query for filtering unread emails.
+ * Process inbox only; skip spam, promotions, social.
+ * Only emails from the last hour (uses epoch timestamp for precise time filter).
+>>>>>>> cb641ae035b8a360bf9ae6ae4e30293652241228
  */
 export function buildGmailQuery(): string {
   const sinceEpoch = Math.floor(
