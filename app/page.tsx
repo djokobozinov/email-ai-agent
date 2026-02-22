@@ -53,6 +53,27 @@ export default function Home() {
             </a>
           </div>
         )}
+
+        <div className="mt-6 space-y-2">
+          <a
+            href="/telegram-webhook"
+            className="block text-sm text-zinc-600 hover:text-zinc-800 dark:text-zinc-300 dark:hover:text-zinc-100"
+          >
+            Set Telegram Webhook
+          </a>
+          <a
+            href="/telegram-test"
+            className="block text-sm text-zinc-600 hover:text-zinc-800 dark:text-zinc-300 dark:hover:text-zinc-100"
+          >
+            Telegram Test
+          </a>
+          <a
+            href="/check-mail"
+            className="block text-sm text-zinc-600 hover:text-zinc-800 dark:text-zinc-300 dark:hover:text-zinc-100"
+          >
+            Check Mail
+          </a>
+        </div>
       </main>
     </div>
   );

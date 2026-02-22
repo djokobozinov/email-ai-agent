@@ -9,6 +9,7 @@ Automated agent that reads new Gmail, summarizes each via OpenAI, and sends to T
 - OpenAI summarization (1 title + 2–3 bullets per email)
 - Telegram delivery
 - Telegram bot replies (incoming message -> OpenAI -> Telegram response)
+- Password-protected utility pages (set webhook, Telegram test, manual check-mail)
 - Cron-based scheduling (every 30 minutes)
 - Minimal mobile-friendly UI for Gmail setup
 
@@ -26,12 +27,12 @@ Automated agent that reads new Gmail, summarizes each via OpenAI, and sends to T
 
 1. Message [@BotFather](https://t.me/BotFather) to create a bot; copy the token
 2. Message [@userinfobot](https://t.me/userinfobot) to get your chat ID
-3. Set webhook to your deployed endpoint:
-   ```bash
-   curl -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook" \
-     -d "url=https://your-domain.com/api/telegram/webhook"
-   ```
-4. Optional (recommended): set `TELEGRAM_WEBHOOK_SECRET`, then register webhook with secret:
+3. Set `TEST_PASSWORD` in your environment (used by protected utility pages)
+4. Optional (recommended): set `TELEGRAM_WEBHOOK_SECRET`
+5. Open `/telegram-webhook`, enter password, and submit. The app will call Telegram `setWebhook` automatically using:
+   - `url = <APP_URL>/api/telegram/webhook`
+   - `secret_token = <TELEGRAM_WEBHOOK_SECRET>` (only when configured)
+6. Optional fallback: set webhook manually with curl:
    ```bash
    curl -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook" \
      -d "url=https://your-domain.com/api/telegram/webhook" \
@@ -57,9 +58,10 @@ Copy `.env.example` to `.env` and fill in:
 | `TELEGRAM_BOT_TOKEN` | From BotFather |
 | `TELEGRAM_CHAT_ID` | Your Telegram chat ID |
 | `CRON_SECRET` | Min 16 chars; used to protect the cron endpoint |
+| `TEST_PASSWORD` | Password for `/telegram-webhook`, `/telegram-test`, and `/check-mail` |
 | `TELEGRAM_WEBHOOK_SECRET` | Optional secret header validation for Telegram webhook |
 
-Optional: `MAX_EMAILS_PER_RUN` (default 5), `LABEL_FILTER` (e.g. `IMPORTANT`)
+Optional: `MAX_EMAILS_PER_RUN` (default 5), `LABEL_FILTER` (e.g. `IMPORTANT`), `TELEGRAM_WEBHOOK_SECRET`
 
 ### Telegram Assistant Behavior
 
