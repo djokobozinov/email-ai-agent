@@ -38,11 +38,39 @@ function formatNotionId(id: string): string {
   )}-${id.slice(20)}`;
 }
 
+function getIdCandidates(input: string): string[] {
+  const trimmed = input.trim();
+  const candidates = [trimmed];
+
+  try {
+    const url = new URL(trimmed);
+    const pathSegment = url.pathname
+      .split("/")
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .at(-1);
+    if (pathSegment) {
+      candidates.unshift(pathSegment);
+    }
+  } catch {
+    // Not a URL, keep raw input only.
+  }
+
+  return candidates;
+}
+
 export function normalizeNotionPageId(input: string): string | null {
-  const compact = input.trim().replace(/-/g, "");
-  const match = compact.match(/[0-9a-fA-F]{32}/);
-  if (!match) return null;
-  return formatNotionId(match[0].toLowerCase());
+  for (const candidate of getIdCandidates(input)) {
+    const compact = candidate.replace(/[^0-9a-fA-F]/g, "");
+    if (compact.length < 32) continue;
+
+    const id = compact.slice(-32).toLowerCase();
+    if (/^[0-9a-f]{32}$/.test(id)) {
+      return formatNotionId(id);
+    }
+  }
+
+  return null;
 }
 
 function getNotionNotesPageId(): string | null {
