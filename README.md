@@ -9,6 +9,7 @@ Automated agent that reads new Gmail, summarizes each via OpenAI, and sends to T
 - OpenAI summarization (1 title + 2–3 bullets per email)
 - Telegram delivery
 - Telegram bot replies (incoming message -> OpenAI -> Telegram response)
+- Telegram notes to Notion (messages starting with `*`)
 - Password-protected utility pages (set webhook, Telegram test, manual check-mail)
 - Cron-based scheduling (every 30 minutes)
 - Minimal mobile-friendly UI for Gmail setup
@@ -39,6 +40,16 @@ Automated agent that reads new Gmail, summarizes each via OpenAI, and sends to T
      -d "secret_token=<TELEGRAM_WEBHOOK_SECRET>"
    ```
 
+### 2.5 Notion Notes (Optional)
+
+If you want Telegram messages that start with `*` to be stored as notes:
+
+1. Create a Notion integration in **Settings & members → Integrations**
+2. Copy the integration secret into `NOTION_API_KEY`
+3. Create or choose a Notion page to hold notes
+4. Share that page with your integration (so it has write access)
+5. Put the page ID or page URL into `NOTION_NOTES_PAGE_ID`
+
 ### 3. Environment Variables
 
 Copy `.env.example` to `.env` and fill in:
@@ -60,14 +71,17 @@ Copy `.env.example` to `.env` and fill in:
 | `CRON_SECRET` | Min 16 chars; used to protect the cron endpoint |
 | `TEST_PASSWORD` | Password for `/telegram-webhook`, `/telegram-test`, and `/check-mail` |
 | `TELEGRAM_WEBHOOK_SECRET` | Optional secret header validation for Telegram webhook |
+| `NOTION_API_KEY` | Optional; Notion integration secret for Telegram notes |
+| `NOTION_NOTES_PAGE_ID` | Optional; Notion page ID (or page URL) where `*` notes are appended |
 
-Optional: `MAX_EMAILS_PER_RUN` (default 5), `LABEL_FILTER` (e.g. `IMPORTANT`), `TELEGRAM_WEBHOOK_SECRET`
+Optional: `MAX_EMAILS_PER_RUN` (default 5), `LABEL_FILTER` (e.g. `IMPORTANT`), `TELEGRAM_WEBHOOK_SECRET`, `NOTION_API_KEY`, `NOTION_NOTES_PAGE_ID`
 
 ### Telegram Assistant Behavior
 
 - When you send a text message to your bot, Telegram calls `/api/telegram/webhook`.
-- The app sends that text to OpenAI (default model: `gpt-5-nano`).
-- The generated answer is sent back to the same Telegram chat.
+- If the text starts with `*`, it is treated as a note and saved to Notion instead of sending to OpenAI.
+- Otherwise, the app sends the text to OpenAI (default model: `gpt-5-nano`).
+- The app sends a confirmation/reply back to the same Telegram chat.
 
 ### 4. Get Gmail Refresh Tokens
 
