@@ -10,7 +10,7 @@ vi.mock("ai", () => ({
   zodSchema: (schema: unknown) => schema,
 }));
 
-// Mock createOpenAI - summarizer calls openai("gpt-4o-mini")
+// Mock createOpenAI - summarizer calls openai(model)
 vi.mock("@ai-sdk/openai", () => ({
   createOpenAI: () => (model: string) => model,
 }));
@@ -59,6 +59,40 @@ describe("summarizeEmail", () => {
       isReceipt: false,
     });
     expect(generateText).toHaveBeenCalledOnce();
+  });
+
+  it("uses gpt-5-nano by default", async () => {
+    process.env.OPENAI_API_KEY = "sk-test-key";
+    delete process.env.OPENAI_MODEL;
+    vi.mocked(generateText).mockResolvedValue({
+      output: {
+        title: "Summary",
+        bullets: [],
+        isReceipt: false,
+      },
+    } as never);
+
+    await summarizeEmail(sampleEmail);
+
+    const callArg = vi.mocked(generateText).mock.calls[0][0];
+    expect(callArg.model).toBe("gpt-5-nano");
+  });
+
+  it("uses OPENAI_MODEL when provided", async () => {
+    process.env.OPENAI_API_KEY = "sk-test-key";
+    process.env.OPENAI_MODEL = "gpt-5-mini";
+    vi.mocked(generateText).mockResolvedValue({
+      output: {
+        title: "Summary",
+        bullets: [],
+        isReceipt: false,
+      },
+    } as never);
+
+    await summarizeEmail(sampleEmail);
+
+    const callArg = vi.mocked(generateText).mock.calls[0][0];
+    expect(callArg.model).toBe("gpt-5-mini");
   });
 
   it("returns receipt summary when isReceipt is true", async () => {

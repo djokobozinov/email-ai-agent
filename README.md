@@ -8,6 +8,7 @@ Automated agent that reads new Gmail, summarizes each via OpenAI, and sends to T
 - Up to 5 Gmail accounts (same client ID/secret)
 - OpenAI summarization (1 title + 2–3 bullets per email)
 - Telegram delivery
+- Telegram bot replies (incoming message -> OpenAI -> Telegram response)
 - Cron-based scheduling (every 30 minutes)
 - Minimal mobile-friendly UI for Gmail setup
 
@@ -25,6 +26,17 @@ Automated agent that reads new Gmail, summarizes each via OpenAI, and sends to T
 
 1. Message [@BotFather](https://t.me/BotFather) to create a bot; copy the token
 2. Message [@userinfobot](https://t.me/userinfobot) to get your chat ID
+3. Set webhook to your deployed endpoint:
+   ```bash
+   curl -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook" \
+     -d "url=https://your-domain.com/api/telegram/webhook"
+   ```
+4. Optional (recommended): set `TELEGRAM_WEBHOOK_SECRET`, then register webhook with secret:
+   ```bash
+   curl -X POST "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook" \
+     -d "url=https://your-domain.com/api/telegram/webhook" \
+     -d "secret_token=<TELEGRAM_WEBHOOK_SECRET>"
+   ```
 
 ### 3. Environment Variables
 
@@ -41,11 +53,19 @@ Copy `.env.example` to `.env` and fill in:
 | `GOOGLE_REFRESH_TOKEN_5` | Account 5 (optional) |
 | `APP_URL` | Full URL of your app (e.g. `https://your-domain.com`) |
 | `OPENAI_API_KEY` | OpenAI API key |
+| `OPENAI_MODEL` | Optional; defaults to `gpt-5-nano` (latest low-cost model) |
 | `TELEGRAM_BOT_TOKEN` | From BotFather |
 | `TELEGRAM_CHAT_ID` | Your Telegram chat ID |
 | `CRON_SECRET` | Min 16 chars; used to protect the cron endpoint |
+| `TELEGRAM_WEBHOOK_SECRET` | Optional secret header validation for Telegram webhook |
 
 Optional: `MAX_EMAILS_PER_RUN` (default 5), `LABEL_FILTER` (e.g. `IMPORTANT`)
+
+### Telegram Assistant Behavior
+
+- When you send a text message to your bot, Telegram calls `/api/telegram/webhook`.
+- The app sends that text to OpenAI (default model: `gpt-5-nano`).
+- The generated answer is sent back to the same Telegram chat.
 
 ### 4. Get Gmail Refresh Tokens
 

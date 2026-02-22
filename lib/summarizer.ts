@@ -2,6 +2,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { generateText, Output, zodSchema } from "ai";
 import { z } from "zod";
 import type { EmailMessage } from "./gmail";
+import { getOpenAIModel } from "./openai";
 
 const SYSTEM_PROMPT = `You summarize emails factually and concisely. Output valid JSON only.
 
@@ -30,12 +31,13 @@ export async function summarizeEmail(email: EmailMessage): Promise<Summary | nul
   if (!apiKey) return null;
 
   const openai = createOpenAI({ apiKey });
+  const model = getOpenAIModel();
 
   const content = `From: ${email.from}\nSubject: ${email.subject}\n\n${email.body.slice(0, 8000)}`;
 
   try {
     const result = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: openai(model),
       system: SYSTEM_PROMPT,
       prompt: content,
       output: Output.object({
