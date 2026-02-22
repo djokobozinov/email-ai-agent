@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateAssistantReply } from "@/lib/assistant";
 import { sendMessageToTelegramChat } from "@/lib/telegram";
+import { extractTelegramNote, saveNoteToNotion } from "@/lib/notion";
 
 interface TelegramMessage {
   text?: string;
@@ -50,6 +51,31 @@ export async function POST(request: NextRequest) {
   const input = message?.text?.trim();
   if (!chatId || !input || message?.from?.is_bot) {
     return NextResponse.json({ ok: true, ignored: true });
+  }
+
+  const note = extractTelegramNote(input);
+  if (note !== null) {
+    const noteResult = note
+      ? await saveNoteToNotion(note, { chatId })
+      : { ok: false, error: "Note is empty. Add text after '*'." };
+
+    const noteReply = noteResult.ok
+      ? "Saved your note to Notion."
+      : `Could not save note to Notion: ${noteResult.error ?? "Unknown error."}`;
+
+    const noteSent = await sendMessageToTelegramChat(chatId, noteReply);
+    if (!noteSent) {
+      return NextResponse.json(
+        { error: "Failed to send Telegram response" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      ok: noteResult.ok,
+      handled: "notion_note",
+      ...(noteResult.error ? { error: noteResult.error } : {}),
+    });
   }
 
   const reply =
