@@ -21,8 +21,13 @@ export default function Home() {
     <div className="flex min-h-screen flex-col items-center justify-center p-4 font-sans">
       <main className="w-full max-w-md rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
         <h1 className="mb-6 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
-          Email → Summary → Telegram
+          Gmail + Telegram Assistant + Notion Notes
         </h1>
+        <p className="mb-6 text-sm text-zinc-500">
+          AI email summaries to Telegram, Telegram assistant replies, and{" "}
+          <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">*</code>
+          -prefixed notes saved to Notion.
+        </p>
 
         {status === null && (
           <p className="text-zinc-500">Loading…</p>

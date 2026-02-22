@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Email → Summary → Telegram",
-  description: "Gmail summaries to Telegram",
+  title: "Gmail + Telegram Assistant + Notion Notes",
+  description:
+    "Gmail AI summaries to Telegram, Telegram assistant replies, and *-prefixed notes saved to Notion.",
 };
 
 export default function RootLayout({

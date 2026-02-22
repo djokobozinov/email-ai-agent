@@ -1,6 +1,6 @@
-# Email → Summary → Telegram
+# Gmail → AI Summaries + Telegram Assistant + Notion Notes
 
-Automated agent that reads new Gmail, summarizes each via OpenAI, and sends to Telegram. Minimal web UI for setup only. All configuration via environment variables; no database.
+Automated agent that reads new Gmail, summarizes each via OpenAI, sends summaries to Telegram, replies to Telegram messages with an AI assistant, and saves `*`-prefixed Telegram notes to Notion. Minimal web UI for setup only. All configuration via environment variables; no database.
 
 ## Features
 
