@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export default function CheckMailPage() {
   const [password, setPassword] = useState("");
@@ -80,12 +81,12 @@ export default function CheckMailPage() {
             {status === "loading" ? "Checking mail…" : "Check & Summarize Mail"}
           </button>
         </form>
-        <a
+        <Link
           href="/"
           className="mt-6 block text-center text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-400"
         >
           ← Back to home
-        </a>
+        </Link>
       </main>
     </div>
   );
