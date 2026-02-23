@@ -61,7 +61,7 @@ describe("notion helpers", () => {
     process.env.NOTION_NOTES_PAGE_ID = "0123456789abcdef0123456789abcdef";
     fetchMock.mockResolvedValue(new Response("{}", { status: 200 }));
 
-    const result = await saveNoteToNotion("buy milk", { chatId: 12345 });
+    const result = await saveNoteToNotion("buy milk");
 
     expect(result).toEqual({ ok: true });
     expect(fetchMock).toHaveBeenCalledOnce();
@@ -84,12 +84,9 @@ describe("notion helpers", () => {
       }>;
     };
 
-    expect(body.children[0].paragraph.rich_text[0].text.content).toContain(
-      "buy milk"
-    );
-    expect(body.children[0].paragraph.rich_text[0].text.content).toContain(
-      "[chat:12345]"
-    );
+    const content = body.children[0].paragraph.rich_text[0].text.content;
+    expect(content).toContain("buy milk");
+    expect(content).toMatch(/^\[.+\] buy milk$/);
   });
 
   it("returns Notion API error message on failed response", async () => {

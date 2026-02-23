@@ -120,10 +120,7 @@ export function extractTelegramNote(input: string): string | null {
   return trimmed.slice(1).trim();
 }
 
-export async function saveNoteToNotion(
-  note: string,
-  options?: { chatId?: string | number }
-): Promise<SaveNoteToNotionResult> {
+export async function saveNoteToNotion(note: string): Promise<SaveNoteToNotionResult> {
   const text = note.trim();
   if (!text) {
     return { ok: false, error: "Note is empty." };
@@ -138,8 +135,12 @@ export async function saveNoteToNotion(
     };
   }
 
-  const timestamp = new Date().toISOString();
-  const prefix = options?.chatId ? `[${timestamp}] [chat:${options.chatId}] ` : `[${timestamp}] `;
+  const timestamp = new Date().toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    hour12: false,
+  });
+  const prefix = `[${timestamp}] `;
   const payload = buildAppendPayload(`${prefix}${text}`);
 
   try {

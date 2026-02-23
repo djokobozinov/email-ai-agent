@@ -55,9 +55,7 @@ export async function POST(request: NextRequest) {
 
   const note = extractTelegramNote(input);
   if (note !== null) {
-    const noteResult = note
-      ? await saveNoteToNotion(note, { chatId })
-      : { ok: false, error: "Note is empty. Add text after '*'." };
+    const noteResult = await saveNoteToNotion(note);
 
     const noteReply = noteResult.ok
       ? "Saved your note to Notion."
