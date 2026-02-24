@@ -70,6 +70,11 @@ export interface SaveNoteToNotionResult {
   error?: string;
 }
 
+interface NotionFailureResult {
+  ok: false;
+  error: string;
+}
+
 function getNotionApiKey(): string | null {
   const apiKey = process.env.NOTION_API_KEY?.trim();
   return apiKey || null;
@@ -175,7 +180,7 @@ async function findNotionChildPageIdByTitle(
   notionApiKey: string,
   parentPageId: string,
   subpageName: string
-): Promise<{ ok: true; pageId: string | null } | SaveNoteToNotionResult> {
+): Promise<{ ok: true; pageId: string | null } | NotionFailureResult> {
   const subpageTitle = subpageName.trim().toLocaleLowerCase();
   let nextCursor: string | null = null;
 
@@ -238,7 +243,7 @@ async function createNotionSubpage(
   notionApiKey: string,
   parentPageId: string,
   subpageName: string
-): Promise<{ ok: true; pageId: string } | SaveNoteToNotionResult> {
+): Promise<{ ok: true; pageId: string } | NotionFailureResult> {
   const payload: NotionCreatePagePayload = {
     parent: {
       page_id: parentPageId,
@@ -290,7 +295,7 @@ async function resolveNotionTargetPageId(
   notionApiKey: string,
   rootPageId: string,
   subpageName: string | null
-): Promise<{ ok: true; pageId: string } | SaveNoteToNotionResult> {
+): Promise<{ ok: true; pageId: string } | NotionFailureResult> {
   if (!subpageName) {
     return { ok: true, pageId: rootPageId };
   }
