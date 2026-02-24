@@ -9,7 +9,7 @@ Automated agent that reads new Gmail, summarizes each via OpenAI, sends summarie
 - OpenAI summarization (1 title + 2–3 bullets per email)
 - Telegram delivery
 - Telegram bot replies (incoming message -> OpenAI -> Telegram response)
-- Telegram notes to Notion (messages starting with `*`)
+- Telegram notes to Notion (messages starting with `*`, with optional subpages)
 - Password-protected utility pages (set webhook, Telegram test, manual check-mail)
 - Cron-based scheduling (every 30 minutes)
 - Minimal mobile-friendly UI for Gmail setup
@@ -46,9 +46,12 @@ If you want Telegram messages that start with `*` to be stored as notes:
 
 1. Create a Notion integration in **Settings & members → Integrations**
 2. Copy the integration secret into `NOTION_API_KEY`
-3. Create or choose a Notion page to hold notes
+3. Create or choose a Notion page to hold notes (this is the root Notes page)
 4. Share that page with your integration (so it has write access)
 5. Put the page ID or page URL into `NOTION_NOTES_PAGE_ID`
+6. Optional subpages are auto-managed by the bot:
+   - `*<name>, <note>` saves into subpage `<name>` under your root Notes page
+   - If subpage `<name>` does not exist yet, it is created automatically
 
 ### 3. Environment Variables
 
@@ -80,6 +83,8 @@ Optional: `MAX_EMAILS_PER_RUN` (default 5), `LABEL_FILTER` (e.g. `IMPORTANT`), `
 
 - When you send a text message to your bot, Telegram calls `/api/telegram/webhook`.
 - If the text starts with `*`, it is treated as a note and saved to Notion instead of sending to OpenAI.
+- `*note text` appends to the root page configured by `NOTION_NOTES_PAGE_ID`.
+- `*<name>, <note text>` appends to Notion subpage `<name>` under the root page (auto-creates the subpage when missing).
 - Otherwise, the app sends the text to OpenAI (default model: `gpt-5-nano`).
 - The app sends a confirmation/reply back to the same Telegram chat.
 
