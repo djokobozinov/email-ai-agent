@@ -17,6 +17,10 @@ function getOAuth2Client(
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const refreshToken = getRefreshToken(accountId);
+  const appUrl = process.env.APP_URL?.trim();
+  const redirectUri = appUrl
+    ? `${appUrl.replace(/\/+$/, "")}/api/auth/gmail`
+    : undefined;
 
   if (!clientId || !clientSecret || !refreshToken) {
     return null;
@@ -25,7 +29,7 @@ function getOAuth2Client(
   const oauth2Client = new google.auth.OAuth2(
     clientId,
     clientSecret,
-    `${process.env.APP_URL}/api/auth/gmail`
+    redirectUri
   );
 
   oauth2Client.setCredentials({ refresh_token: refreshToken });

@@ -55,10 +55,14 @@ export async function POST(request: NextRequest) {
 
   const note = extractTelegramNote(input);
   if (note !== null) {
-    const noteResult = await saveNoteToNotion(note);
+    const noteResult = await saveNoteToNotion(note.text, {
+      subpageName: note.subpageName,
+    });
 
     const noteReply = noteResult.ok
-      ? "Saved your note to Notion."
+      ? note.subpageName
+        ? `Saved your note to Notion subpage "${note.subpageName}".`
+        : "Saved your note to Notion."
       : `Could not save note to Notion: ${noteResult.error ?? "Unknown error."}`;
 
     const noteSent = await sendMessageToTelegramChat(chatId, noteReply);
