@@ -3,19 +3,10 @@ import {
   getConfiguredAccountIds,
   listUnreadMessageIds,
   getMessage,
-  isGmailConfigured,
 } from "@/lib/gmail";
+import { getEmailSummaryFeatureReadiness } from "@/lib/features";
 import { summarizeEmail } from "@/lib/summarizer";
 import { sendToTelegram } from "@/lib/telegram";
-
-function isFullyConfigured(): boolean {
-  return !!(
-    isGmailConfigured() &&
-    process.env.OPENAI_API_KEY &&
-    process.env.TELEGRAM_BOT_TOKEN &&
-    process.env.TELEGRAM_CHAT_ID
-  );
-}
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
@@ -26,11 +17,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid password" }, { status: 401 });
   }
 
-  if (!isFullyConfigured()) {
-    return NextResponse.json(
-      { error: "Gmail, OpenAI, and Telegram must be configured." },
-      { status: 400 }
-    );
+  const emailFeature = getEmailSummaryFeatureReadiness();
+  if (!emailFeature.enabled) {
+    return NextResponse.json({
+      processed: 0,
+      skipped: true,
+      reason:
+        "Email summary feature is disabled because required configuration is missing.",
+      missing: emailFeature.missing,
+    });
   }
 
   let processed = 0;
