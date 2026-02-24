@@ -8,12 +8,16 @@ export default function CheckMailPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [error, setError] = useState("");
   const [processed, setProcessed] = useState<number | null>(null);
+  const [skippedReason, setSkippedReason] = useState("");
+  const [missingConfig, setMissingConfig] = useState<string[]>([]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("loading");
     setError("");
     setProcessed(null);
+    setSkippedReason("");
+    setMissingConfig([]);
 
     try {
       const res = await fetch("/api/check-mail", {
@@ -30,6 +34,8 @@ export default function CheckMailPage() {
       }
 
       setProcessed(data.processed ?? 0);
+      setSkippedReason(typeof data.reason === "string" ? data.reason : "");
+      setMissingConfig(Array.isArray(data.missing) ? data.missing : []);
       setStatus("success");
     } catch {
       setError("Network error");
@@ -44,7 +50,8 @@ export default function CheckMailPage() {
           Check Mail
         </h1>
         <p className="mb-6 text-sm text-zinc-500">
-          Trigger summarize mail for unread emails and send to Telegram.
+          Trigger unread email summarization. If the email summary feature is
+          disabled, this route will safely no-op.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -69,9 +76,29 @@ export default function CheckMailPage() {
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           )}
           {status === "success" && processed !== null && (
-            <p className="text-sm text-green-600 dark:text-green-500">
-              Done. {processed} email{processed === 1 ? "" : "s"} summarized and sent to Telegram.
-            </p>
+            <div
+              className={`space-y-1 text-sm ${
+                skippedReason
+                  ? "text-amber-600 dark:text-amber-500"
+                  : "text-green-600 dark:text-green-500"
+              }`}
+            >
+              <p>
+                {skippedReason
+                  ? skippedReason
+                  : `Done. ${processed} email${
+                      processed === 1 ? "" : "s"
+                    } summarized and sent to Telegram.`}
+              </p>
+              {skippedReason && missingConfig.length > 0 && (
+                <p className="text-zinc-600 dark:text-zinc-300">
+                  Missing:{" "}
+                  <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">
+                    {missingConfig.join(", ")}
+                  </code>
+                </p>
+              )}
+            </div>
           )}
           <button
             type="submit"
