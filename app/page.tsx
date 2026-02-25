@@ -226,7 +226,6 @@ export default function Home() {
         {/* Hero — README style */}
         <section className="mb-12">
           <div className="mb-2 flex items-center gap-3">
-            <Image src="/logo.png" alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded object-contain" />
             <h1 className="text-2xl font-bold text-white">
               email-ai-agent
             </h1>
