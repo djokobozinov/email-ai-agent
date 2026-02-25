@@ -110,7 +110,7 @@ const howItWorks = [
   {
     title: "Notion Notes",
     description:
-      "Messages that start with * (asterisk) are saved as notes in your Notion page. Use `*<name>`, to save to a subpage in Notes with that given name.",
+      "Messages that start with * (asterisk) are saved as notes in your Notion page. Use `*<name>,`, to save to a subpage in Notes with that given name.",
     example: '*Call back John re: project scope by Friday → appended to main Notes. *Work, Review Q1 roadmap → saved to subpage "Work" under Notes.',
   },
   {
