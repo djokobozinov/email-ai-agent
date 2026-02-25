@@ -2,6 +2,12 @@
 
 import { useEffect, useState } from "react";
 
+const navLinks = [
+  { href: "#setup", label: "Setup" },
+  { href: "#env", label: "Env Vars" },
+  { href: "https://github.com/djokobozinov/email-ai-agent", label: "github →", external: true },
+];
+
 interface FeatureReadiness {
   enabled: boolean;
   missing: string[];
@@ -117,6 +123,7 @@ const howItWorks = [
 
 export default function Home() {
   const [status, setStatus] = useState<AccountStatus | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/account")
@@ -129,31 +136,89 @@ export default function Home() {
     <div className="min-h-screen bg-[#0d1117] font-mono text-sm text-[#c9d1d9]">
       {/* Terminal-style header */}
       <header className="sticky top-0 z-50 border-b border-[#30363d] bg-[#161b22]">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <span className="text-[#8b949e]">$</span>
-            <span className="text-[#58a6ff]">email-ai-agent</span>
-            <span className="rounded border border-[#30363d] bg-[#21262d] px-2 py-0.5 text-xs text-[#8b949e]">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <div className="flex min-w-0 shrink items-center gap-2 sm:gap-3">
+            <span className="shrink-0 text-[#8b949e]">$</span>
+            <span className="truncate text-[#58a6ff]">email-ai-agent</span>
+            <span className="hidden shrink-0 rounded border border-[#30363d] bg-[#21262d] px-2 py-0.5 text-xs text-[#8b949e] sm:inline">
               MIT
             </span>
           </div>
-          <nav className="flex items-center gap-4">
-            <a href="#setup" className="text-[#58a6ff] hover:underline">
-              Setup
-            </a>
-            <a href="#env" className="text-[#58a6ff] hover:underline">
-              Env Vars
-            </a>
-            <a
-              href="https://github.com/djokobozinov/email-ai-agent"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#8b949e] hover:text-[#c9d1d9]"
-            >
-              github →
-            </a>
+
+          {/* Desktop nav */}
+          <nav className="hidden items-center gap-6 md:flex">
+            {navLinks.map((link) =>
+              link.external ? (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="whitespace-nowrap text-[#8b949e] hover:text-[#c9d1d9]"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <a key={link.label} href={link.href} className="whitespace-nowrap text-[#58a6ff] hover:underline">
+                  {link.label}
+                </a>
+              )
+            )}
           </nav>
+
+          {/* Mobile menu button */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((o) => !o)}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded border border-[#30363d] text-[#8b949e] hover:border-[#58a6ff] hover:text-[#c9d1d9] md:hidden"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? (
+              <span className="text-lg leading-none">×</span>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            )}
+          </button>
         </div>
+
+        {/* Mobile nav panel */}
+        {mobileMenuOpen && (
+          <nav
+            className="border-t border-[#30363d] bg-[#0d1117] md:hidden"
+            aria-label="Mobile navigation"
+          >
+            <div className="mx-auto max-w-5xl space-y-1 px-4 py-3">
+              {navLinks.map((link) =>
+                link.external ? (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block rounded border border-transparent px-4 py-3 text-[#8b949e] hover:border-[#30363d] hover:bg-[#161b22] hover:text-[#c9d1d9]"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block rounded border border-transparent px-4 py-3 text-[#58a6ff] hover:border-[#30363d] hover:bg-[#161b22]"
+                  >
+                    {link.label}
+                  </a>
+                )
+              )}
+            </div>
+          </nav>
+        )}
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-8">
