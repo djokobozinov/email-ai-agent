@@ -71,7 +71,7 @@ const features = [
   {
     title: "Notion Notes",
     description:
-      "Prefix any Telegram message with * to save as a note, or `*<name>`, to save to a subpage in Notes with that name.",
+      "Prefix any Telegram message with * to save as a note, or `*<name>,`, to save to a subpage in Notes with that name.",
     slug: "notion",
   },
   {
