@@ -6,7 +6,11 @@ import { useEffect, useState } from "react";
 const navLinks = [
   { href: "#setup", label: "Setup" },
   { href: "#env", label: "Env Vars" },
-  { href: "https://github.com/djokobozinov/email-ai-agent", label: "github →", external: true },
+  {
+    href: "https://github.com/djokobozinov/email-ai-agent",
+    label: "github →",
+    external: true,
+  },
 ];
 
 interface FeatureReadiness {
@@ -26,22 +30,86 @@ interface AccountStatus {
   missing?: string[];
 }
 
-const ENV_VARS_REFERENCE: { name: string; description: string; feature: string }[] = [
-  { name: "GOOGLE_CLIENT_ID", description: "OAuth client from Google Cloud Console", feature: "Email summaries" },
-  { name: "GOOGLE_CLIENT_SECRET", description: "OAuth secret from Google Cloud Console", feature: "Email summaries" },
-  { name: "GOOGLE_REFRESH_TOKEN", description: "One per Gmail account (use Setup Gmail)", feature: "Email summaries" },
-  { name: "OPENAI_API_KEY", description: "API key from platform.openai.com", feature: "Summaries & Assistant" },
-  { name: "OPENAI_MODEL", description: "Optional; default gpt-5-nano", feature: "AI" },
-  { name: "TELEGRAM_BOT_TOKEN", description: "Create via @BotFather on Telegram", feature: "Telegram" },
-  { name: "TELEGRAM_CHAT_ID", description: "Get from @userinfobot on Telegram", feature: "Telegram" },
-  { name: "NOTION_API_KEY", description: "Notion integration secret", feature: "Notion notes" },
-  { name: "NOTION_NOTES_PAGE_ID", description: "Target page ID or URL", feature: "Notion notes" },
-  { name: "APP_URL", description: "e.g. https://yourdomain.com", feature: "Webhook & OAuth" },
-  { name: "TEST_PASSWORD", description: "Password for utility pages", feature: "Setup pages" },
-  { name: "MAX_EMAILS_PER_RUN", description: "Optional; default 5", feature: "Email summaries" },
-  { name: "LABEL_FILTER", description: "Optional; e.g. IMPORTANT", feature: "Email summaries" },
-  { name: "TELEGRAM_WEBHOOK_SECRET", description: "Optional header secret for webhook", feature: "Webhook" },
-  { name: "CRON_SECRET", description: "Optional bearer token for cron", feature: "Scheduling" },
+const ENV_VARS_REFERENCE: {
+  name: string;
+  description: string;
+  feature: string;
+}[] = [
+  {
+    name: "GOOGLE_CLIENT_ID",
+    description: "OAuth client from Google Cloud Console",
+    feature: "Email summaries",
+  },
+  {
+    name: "GOOGLE_CLIENT_SECRET",
+    description: "OAuth secret from Google Cloud Console",
+    feature: "Email summaries",
+  },
+  {
+    name: "GOOGLE_REFRESH_TOKEN",
+    description: "One per Gmail account (use Setup Gmail)",
+    feature: "Email summaries",
+  },
+  {
+    name: "OPENAI_API_KEY",
+    description: "API key from platform.openai.com",
+    feature: "Summaries & Assistant",
+  },
+  {
+    name: "OPENAI_MODEL",
+    description: "Optional; default gpt-5-nano",
+    feature: "AI",
+  },
+  {
+    name: "TELEGRAM_BOT_TOKEN",
+    description: "Create via @BotFather on Telegram",
+    feature: "Telegram",
+  },
+  {
+    name: "TELEGRAM_CHAT_ID",
+    description: "Get from @userinfobot on Telegram",
+    feature: "Telegram",
+  },
+  {
+    name: "NOTION_API_KEY",
+    description: "Notion integration secret",
+    feature: "Notion notes",
+  },
+  {
+    name: "NOTION_NOTES_PAGE_ID",
+    description: "Target page ID or URL",
+    feature: "Notion notes",
+  },
+  {
+    name: "APP_URL",
+    description: "e.g. https://yourdomain.com",
+    feature: "Webhook & OAuth",
+  },
+  {
+    name: "TEST_PASSWORD",
+    description: "Password for utility pages",
+    feature: "Setup pages",
+  },
+  {
+    name: "MAX_EMAILS_PER_RUN",
+    description: "Optional; default 5",
+    feature: "Email summaries",
+  },
+  {
+    name: "LABEL_FILTER",
+    description: "Optional; e.g. IMPORTANT",
+    feature: "Email summaries",
+  },
+  {
+    name: "TELEGRAM_WEBHOOK_SECRET",
+    description: "Optional header secret for webhook",
+    feature: "Webhook",
+  },
+  {
+    name: "CRON_SECRET",
+    description: "Optional bearer token for cron",
+    feature: "Scheduling",
+  },
 ];
 
 const features = [
@@ -88,37 +156,43 @@ const howItWorks = [
     title: "Gmail Integration",
     description:
       "The agent connects to up to 5 Gmail accounts via OAuth2. It reads unread messages from inbox, social, and promotions — spam is automatically skipped. Access is read-only.",
-    example: "You receive 12 new emails. The agent scans all connected accounts, skips spam, and processes the 8 relevant unread messages.",
+    example:
+      "You receive 12 new emails. The agent scans all connected accounts, skips spam, and processes the 8 relevant unread messages.",
   },
   {
     title: "AI Summaries",
     description:
       "Each email is sent to OpenAI, which returns a short title and 2–3 bullet points. You get the gist without opening the email.",
-    example: 'A long newsletter becomes: "Q4 Product Launch Recap" — Key features shipped · Beta feedback summary · Next steps.',
+    example:
+      'A long newsletter becomes: "Q4 Product Launch Recap" — Key features shipped · Beta feedback summary · Next steps.',
   },
   {
     title: "Telegram Delivery",
     description:
       "Summaries are sent to your Telegram chat. Social emails get 👥 prefix, promotions get 🏷️, so you can skim by category at a glance.",
-    example: 'You receive: "🏷️ 20% off Site-Wide — Summer sale ends Sunday · Free shipping over $50."',
+    example:
+      'You receive: "🏷️ 20% off Site-Wide — Summer sale ends Sunday · Free shipping over $50."',
   },
   {
     title: "AI Chat Assistant",
     description:
       "Send any message to your bot. It's forwarded to OpenAI, and the reply comes back to you in Telegram. Use it for questions, drafting, or brainstorming.",
-    example: 'You: "Draft a 2-line reply declining the meeting." Bot: "Thank you for the invite. I won\'t be able to attend..."',
+    example:
+      'You: "Draft a 2-line reply declining the meeting." Bot: "Thank you for the invite. I won\'t be able to attend..."',
   },
   {
     title: "Notion Notes",
     description:
       "Messages that start with * (asterisk) are saved as notes in your Notion page. Use `*<name>,` to save to a subpage in Notes with that given name.",
-    example: '*Call back John re: project scope by Friday → appended to main Notes. *Work, Review Q1 roadmap → saved to subpage "Work" under Notes.',
+    example:
+      '*Call back John re: project scope by Friday → appended to main Notes. *Work, Review Q1 roadmap → saved to subpage "Work" under Notes.',
   },
   {
     title: "Smart Scheduling",
     description:
       "A cron job runs every 30 minutes (or on your schedule). It triggers the email check and processing. Works with Vercel Cron or any external cron service.",
-    example: "At 9:00, 9:30, 10:00… the agent checks for new mail, summarizes it, and sends to Telegram — no manual refresh needed.",
+    example:
+      "At 9:00, 9:30, 10:00… the agent checks for new mail, summarizes it, and sends to Telegram — no manual refresh needed.",
   },
 ];
 
@@ -138,7 +212,7 @@ export default function Home() {
       {/* Terminal-style header */}
       <header className="sticky top-0 z-50 border-b border-[#30363d] bg-[#161b22]">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <div className="flex min-w-0 shrink items-center gap-2 sm:gap-3">          
+          <div className="flex min-w-0 shrink items-center gap-2 sm:gap-3">
             <span className="shrink-0 text-[#8b949e]">$</span>
             <span className="truncate text-[#58a6ff]">email-ai-agent</span>
             <span className="hidden shrink-0 rounded border border-[#30363d] bg-[#21262d] px-2 py-0.5 text-xs text-[#8b949e] sm:inline">
@@ -160,10 +234,14 @@ export default function Home() {
                   {link.label}
                 </a>
               ) : (
-                <a key={link.label} href={link.href} className="whitespace-nowrap text-[#58a6ff] hover:underline">
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="whitespace-nowrap text-[#58a6ff] hover:underline"
+                >
                   {link.label}
                 </a>
-              )
+              ),
             )}
           </nav>
 
@@ -178,7 +256,15 @@ export default function Home() {
             {mobileMenuOpen ? (
               <span className="text-lg leading-none">×</span>
             ) : (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <line x1="3" y1="12" x2="21" y2="12" />
                 <line x1="3" y1="18" x2="21" y2="18" />
@@ -215,7 +301,7 @@ export default function Home() {
                   >
                     {link.label}
                   </a>
-                )
+                ),
               )}
             </div>
           </nav>
@@ -226,18 +312,20 @@ export default function Home() {
         {/* Hero — README style */}
         <section className="mb-12">
           <div className="mb-2 flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-white">
-              email-ai-agent
-            </h1>
+            <h1 className="text-2xl font-bold text-white">email-ai-agent</h1>
           </div>
           <p className="mb-6 text-[#8b949e]">
-            Gmail summaries → AI → Telegram assistant + Notion notes. Self-hosted, open source.
+            Gmail summaries → AI → Telegram assistant + Notion notes.
+            Self-hosted, open source.
           </p>
           <div className="mb-6 rounded-md border border-[#30363d] bg-[#161b22] p-4">
             <p className="text-[#8b949e]">
-              <span className="text-[#6e7681]">//</span> Deploy, configure env vars, connect Gmail via OAuth.
+              <span className="text-[#6e7681]">//</span> Deploy, configure env
+              vars, connect Gmail via OAuth.
               <br />
-              <span className="text-[#6e7681]">//</span> Cron runs every 30min. Summaries hit your Telegram. <code className="text-[#bc8cff]">*</code> prefix saves to Notion.
+              <span className="text-[#6e7681]">//</span> Cron runs every 30min.
+              Summaries hit your Telegram.{" "}
+              <code className="text-[#bc8cff]">*</code> prefix saves to Notion.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -286,7 +374,10 @@ export default function Home() {
           </h2>
           <div className="space-y-6">
             {howItWorks.map((item) => (
-              <div key={item.title} className="rounded border border-[#30363d] bg-[#161b22] p-4">
+              <div
+                key={item.title}
+                className="rounded border border-[#30363d] bg-[#161b22] p-4"
+              >
                 <h3 className="mb-2 font-semibold text-white">{item.title}</h3>
                 <p className="mb-3 text-[#8b949e]">{item.description}</p>
                 <div className="rounded border border-[#21262d] bg-[#0d1117] px-3 py-2">
@@ -372,7 +463,12 @@ export default function Home() {
                         ["telegramTest", "telegram-test"],
                         ["telegramWebhookSetup", "webhook"],
                       ]
-                        .filter(([key]) => status.features?.[key as keyof typeof status.features]?.enabled)
+                        .filter(
+                          ([key]) =>
+                            status.features?.[
+                              key as keyof typeof status.features
+                            ]?.enabled,
+                        )
                         .map(([_, label]) => (
                           <span
                             key={label}
@@ -384,7 +480,9 @@ export default function Home() {
                     </div>
                   )}
                   <p className="text-xs text-[#8b949e]">
-                    To disconnect: remove <code className="text-[#bc8cff]">GOOGLE_REFRESH_TOKEN</code> from env.
+                    To disconnect: remove{" "}
+                    <code className="text-[#bc8cff]">GOOGLE_REFRESH_TOKEN</code>{" "}
+                    from env.
                   </p>
                 </div>
               )}
@@ -401,9 +499,10 @@ export default function Home() {
                           ...(status.features.telegramAssistant?.missing ?? []),
                           ...(status.features.notionNotes?.missing ?? []),
                           ...(status.features.telegramTest?.missing ?? []),
-                          ...(status.features.telegramWebhookSetup?.missing ?? []),
+                          ...(status.features.telegramWebhookSetup?.missing ??
+                            []),
                         ]
-                      : status.missing ?? [];
+                      : (status.missing ?? []);
                     const uniqueMissing = [...new Set(missing)];
                     return (
                       uniqueMissing.length > 0 && (
@@ -411,7 +510,10 @@ export default function Home() {
                           <p className="text-xs text-[#8b949e]">missing:</p>
                           <div className="flex flex-wrap gap-1">
                             {uniqueMissing.map((m) => (
-                              <code key={m} className="rounded bg-[#21262d] px-2 py-0.5 text-[#f85149]">
+                              <code
+                                key={m}
+                                className="rounded bg-[#21262d] px-2 py-0.5 text-[#f85149]"
+                              >
                                 {m}
                               </code>
                             ))}
@@ -435,9 +537,21 @@ export default function Home() {
               <h3 className="mb-3 font-semibold text-white">Quick Actions</h3>
               <div className="space-y-2">
                 {[
-                  { href: "/telegram-webhook", label: "Set Telegram Webhook", desc: "Configure webhook" },
-                  { href: "/telegram-test", label: "Telegram Test", desc: "Test bot" },
-                  { href: "/check-mail", label: "Check Mail Now", desc: "Manually trigger" },
+                  {
+                    href: "/telegram-webhook",
+                    label: "Set Telegram Webhook",
+                    desc: "Configure webhook",
+                  },
+                  {
+                    href: "/telegram-test",
+                    label: "Telegram Test",
+                    desc: "Test bot",
+                  },
+                  {
+                    href: "/check-mail",
+                    label: "Check Mail Now",
+                    desc: "Manually trigger",
+                  },
                 ].map((link) => (
                   <a
                     key={link.href}
@@ -459,7 +573,9 @@ export default function Home() {
             ## Environment Variables
           </h2>
           <p className="mb-4 text-[#8b949e]">
-            Set in <code className="text-[#bc8cff]">.env.local</code> or deployment env. See <code className="text-[#bc8cff]">.env.example</code>.
+            Set in <code className="text-[#bc8cff]">.env.local</code> or
+            deployment env. See{" "}
+            <code className="text-[#bc8cff]">.env.example</code>.
           </p>
           <div className="overflow-x-auto rounded border border-[#30363d] bg-[#0d1117]">
             <div className="border-b border-[#30363d] px-4 py-2 text-xs text-[#8b949e]">
@@ -467,7 +583,10 @@ export default function Home() {
             </div>
             <div className="p-4 font-mono text-xs">
               {ENV_VARS_REFERENCE.map((v) => (
-                <div key={v.name} className="flex flex-wrap gap-x-4 gap-y-1 py-1 sm:flex-nowrap">
+                <div
+                  key={v.name}
+                  className="flex flex-wrap gap-x-4 gap-y-1 py-1 sm:flex-nowrap"
+                >
                   <code className="shrink-0 text-[#58a6ff]">{v.name}</code>
                   <span className="text-[#6e7681]"># {v.description}</span>
                   <span className="shrink-0 text-[#6e7681]">({v.feature})</span>
