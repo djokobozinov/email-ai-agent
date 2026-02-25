@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 const navLinks = [
@@ -137,7 +138,7 @@ export default function Home() {
       {/* Terminal-style header */}
       <header className="sticky top-0 z-50 border-b border-[#30363d] bg-[#161b22]">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <div className="flex min-w-0 shrink items-center gap-2 sm:gap-3">
+          <div className="flex min-w-0 shrink items-center gap-2 sm:gap-3">          
             <span className="shrink-0 text-[#8b949e]">$</span>
             <span className="truncate text-[#58a6ff]">email-ai-agent</span>
             <span className="hidden shrink-0 rounded border border-[#30363d] bg-[#21262d] px-2 py-0.5 text-xs text-[#8b949e] sm:inline">
@@ -224,9 +225,12 @@ export default function Home() {
       <main className="mx-auto max-w-5xl px-4 py-8">
         {/* Hero — README style */}
         <section className="mb-12">
-          <h1 className="mb-2 text-2xl font-bold text-white">
-            email-ai-agent
-          </h1>
+          <div className="mb-2 flex items-center gap-3">
+            <Image src="/logo.png" alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded object-contain" />
+            <h1 className="text-2xl font-bold text-white">
+              email-ai-agent
+            </h1>
+          </div>
           <p className="mb-6 text-[#8b949e]">
             Gmail summaries → AI → Telegram assistant + Notion notes. Self-hosted, open source.
           </p>
