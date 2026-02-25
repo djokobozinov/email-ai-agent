@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Gmail + Telegram Assistant + Notion Notes",
   description:
-    "Gmail AI summaries to Telegram, Telegram assistant replies, and *-prefixed notes saved to Notion.",
+    "Open-source Gmail AI agent. Run it yourself—deploy, configure, and get summaries in Telegram, assistant replies, and *-prefixed notes to Notion.",
 };
 
 export default function RootLayout({
@@ -24,9 +24,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} font-mono antialiased`}
       >
         {children}
       </body>
