@@ -229,7 +229,7 @@ export default function Home() {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="whitespace-nowrap text-[#8b949e] hover:text-[#c9d1d9]"
+                  className="whitespace-nowrap text-[#8b949e] underline decoration-[#8b949e]/40 underline-offset-2 hover:text-[#c9d1d9] hover:decoration-[#c9d1d9]"
                 >
                   {link.label}
                 </a>
@@ -237,7 +237,7 @@ export default function Home() {
                 <a
                   key={link.label}
                   href={link.href}
-                  className="whitespace-nowrap text-[#58a6ff] hover:underline"
+                  className="whitespace-nowrap text-[#58a6ff] underline decoration-[#58a6ff]/40 underline-offset-2 hover:decoration-[#58a6ff]"
                 >
                   {link.label}
                 </a>
@@ -288,7 +288,7 @@ export default function Home() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block rounded border border-transparent px-4 py-3 text-[#8b949e] hover:border-[#30363d] hover:bg-[#161b22] hover:text-[#c9d1d9]"
+                    className="block rounded border border-transparent px-4 py-3 text-[#8b949e] underline decoration-[#8b949e]/40 underline-offset-2 hover:border-[#30363d] hover:bg-[#161b22] hover:text-[#c9d1d9] hover:decoration-[#c9d1d9]"
                   >
                     {link.label}
                   </a>
@@ -297,7 +297,7 @@ export default function Home() {
                     key={link.label}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block rounded border border-transparent px-4 py-3 text-[#58a6ff] hover:border-[#30363d] hover:bg-[#161b22]"
+                    className="block rounded border border-transparent px-4 py-3 text-[#58a6ff] underline decoration-[#58a6ff]/40 underline-offset-2 hover:border-[#30363d] hover:bg-[#161b22] hover:decoration-[#58a6ff]"
                   >
                     {link.label}
                   </a>
@@ -320,10 +320,10 @@ export default function Home() {
           </p>
           <div className="mb-6 rounded-md border border-[#30363d] bg-[#161b22] p-4">
             <p className="text-[#8b949e]">
-              <span className="text-[#6e7681]">//</span> Deploy, configure env
+              <span className="text-[#7d8590]">//</span> Deploy, configure env
               vars, connect Gmail via OAuth.
               <br />
-              <span className="text-[#6e7681]">//</span> Cron runs every 30min.
+              <span className="text-[#7d8590]">//</span> Cron runs every 30min.
               Summaries hit your Telegram.{" "}
               <code className="text-[#bc8cff]">*</code> prefix saves to Notion.
             </p>
@@ -381,7 +381,7 @@ export default function Home() {
                 <h3 className="mb-2 font-semibold text-white">{item.title}</h3>
                 <p className="mb-3 text-[#8b949e]">{item.description}</p>
                 <div className="rounded border border-[#21262d] bg-[#0d1117] px-3 py-2">
-                  <span className="text-[#6e7681]">// example:</span>
+                  <span className="text-[#7d8590]">// example:</span>
                   <p className="mt-1 text-[#8b949e]">{item.example}</p>
                 </div>
               </div>
@@ -556,10 +556,10 @@ export default function Home() {
                   <a
                     key={link.href}
                     href={link.href}
-                    className="flex items-center justify-between rounded border border-transparent px-3 py-2 text-[#8b949e] hover:border-[#30363d] hover:text-[#c9d1d9]"
+                    className="flex items-center justify-between rounded border border-transparent px-3 py-2 text-[#8b949e] underline decoration-[#8b949e]/40 underline-offset-2 hover:border-[#30363d] hover:text-[#c9d1d9] hover:decoration-[#c9d1d9]"
                   >
                     <span>{link.label}</span>
-                    <span className="text-[#6e7681]">→</span>
+                    <span className="text-[#7d8590]">→</span>
                   </a>
                 ))}
               </div>
@@ -588,8 +588,8 @@ export default function Home() {
                   className="flex flex-wrap gap-x-4 gap-y-1 py-1 sm:flex-nowrap"
                 >
                   <code className="shrink-0 text-[#58a6ff]">{v.name}</code>
-                  <span className="text-[#6e7681]"># {v.description}</span>
-                  <span className="shrink-0 text-[#6e7681]">({v.feature})</span>
+                  <span className="text-[#7d8590]"># {v.description}</span>
+                  <span className="shrink-0 text-[#7d8590]">({v.feature})</span>
                 </div>
               ))}
             </div>
@@ -621,7 +621,7 @@ export default function Home() {
               href="https://github.com/djokobozinov/email-ai-agent"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#58a6ff] hover:underline"
+              className="text-[#58a6ff] underline decoration-[#58a6ff]/40 underline-offset-2 hover:decoration-[#58a6ff]"
             >
               github
             </a>

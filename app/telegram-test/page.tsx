@@ -42,7 +42,7 @@ export default function TelegramTest() {
         <h1 className="mb-6 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
           Telegram Test
         </h1>
-        <p className="mb-6 text-sm text-zinc-500">
+        <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
           Send a test message to your Telegram. Enter password to continue.
         </p>
 
@@ -99,7 +99,7 @@ export default function TelegramTest() {
         </form>
         <Link
           href="/"
-          className="mt-6 block text-center text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-400"
+          className="mt-6 block text-center text-sm text-zinc-500 underline decoration-zinc-400/40 underline-offset-2 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 dark:hover:decoration-zinc-300"
         >
           ← Back to home
         </Link>

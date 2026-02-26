@@ -55,7 +55,7 @@ export default function TelegramWebhookPage() {
         <h1 className="mb-6 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
           Set Telegram Webhook
         </h1>
-        <p className="mb-6 text-sm text-zinc-500">
+        <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
           Enter password to register Telegram webhook automatically using your
           configured APP_URL.
         </p>
@@ -111,7 +111,7 @@ export default function TelegramWebhookPage() {
 
         <Link
           href="/"
-          className="mt-6 block text-center text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-400"
+          className="mt-6 block text-center text-sm text-zinc-500 underline decoration-zinc-400/40 underline-offset-2 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 dark:hover:decoration-zinc-300"
         >
           ← Back to home
         </Link>

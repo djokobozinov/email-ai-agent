@@ -49,7 +49,7 @@ export default function CheckMailPage() {
         <h1 className="mb-6 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
           Check Mail
         </h1>
-        <p className="mb-6 text-sm text-zinc-500">
+        <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
           Trigger unread email summarization. If the email summary feature is
           disabled, this route will safely no-op.
         </p>
@@ -110,7 +110,7 @@ export default function CheckMailPage() {
         </form>
         <Link
           href="/"
-          className="mt-6 block text-center text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-400"
+          className="mt-6 block text-center text-sm text-zinc-500 underline decoration-zinc-400/40 underline-offset-2 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300 dark:hover:decoration-zinc-300"
         >
           ← Back to home
         </Link>
