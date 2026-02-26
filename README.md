@@ -91,6 +91,7 @@ Copy `.env.example` to `.env` and set only what you need:
 - If the text starts with `*`, it is treated as a note and saved to Notion instead of sending to OpenAI.
 - `*note text` appends to the root page configured by `NOTION_NOTES_PAGE_ID`.
 - `*<name>, <note text>` appends to Notion subpage `<name>` under the root page (auto-creates the subpage when missing).
+- `*` as a reply to another Telegram message saves the replied message text as the note.
 - Otherwise, the app sends the text to OpenAI (default model: `gpt-5-nano`).
 - The app sends a confirmation/reply back to the same Telegram chat.
 
