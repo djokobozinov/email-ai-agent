@@ -94,7 +94,9 @@ describe("notion helpers", () => {
 
     const content = body.children[0].paragraph.rich_text[0].text.content;
     expect(content).toContain("buy milk");
-    expect(content).toMatch(/^\[.+\] buy milk$/);
+    expect(content).toContain("\n");
+    expect(content).toContain("──────────");
+    expect(content).toMatch(/^.+\nbuy milk\n──────────$/s);
   });
 
   it("appends note text to an existing Notion subpage", async () => {

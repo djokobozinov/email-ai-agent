@@ -149,6 +149,18 @@ function chunkText(text: string, chunkSize = NOTION_TEXT_CHUNK_SIZE): string[] {
   return chunks.length > 0 ? chunks : [text];
 }
 
+function formatNoteEntry(text: string): string {
+  const timestamp = new Date().toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    hour12: false,
+  });
+
+  return `${timestamp}
+${text}
+──────────`;
+}
+
 function buildAppendPayload(text: string): NotionAppendChildrenPayload {
   return {
     children: chunkText(text).map((chunk) => ({
@@ -373,13 +385,7 @@ export async function saveNoteToNotion(
     return targetPage;
   }
 
-  const timestamp = new Date().toLocaleString("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    hour12: false,
-  });
-  const prefix = `[${timestamp}] `;
-  const payload = buildAppendPayload(`${prefix}${text}`);
+  const payload = buildAppendPayload(formatNoteEntry(text));
 
   try {
     const response = await fetch(

@@ -185,7 +185,7 @@ const howItWorks = [
     description:
       "Messages that start with * (asterisk) are saved as notes in your Notion page. Use `*<name>,` to save to a subpage in Notes, or reply with `*` to capture the replied message as a note.",
     example:
-      '*Call back John re: project scope by Friday → appended to main Notes. *Work, Review Q1 roadmap → saved to subpage "Work" under Notes. Reply `*` to a teammate\'s message → that replied message is saved to Notes.',
+      '*Call back John re: project scope by Friday → appended to main Notes. *Work, Review Q1 roadmap → saved to subpage "Work" under Notes. Reply `*` to another message → that replied message is saved to Notes.',
   },
   {
     title: "Smart Scheduling",
