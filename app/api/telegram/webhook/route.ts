@@ -5,12 +5,26 @@ import { extractTelegramNote, saveNoteToNotion } from "@/lib/notion";
 
 interface TelegramMessage {
   text?: string;
+  reply_to_message?: {
+    text?: string;
+  };
   chat?: {
     id?: number | string;
   };
   from?: {
     is_bot?: boolean;
   };
+}
+
+function resolveNoteTextFromMessage(
+  noteText: string,
+  replyToText: string | undefined
+): string {
+  if (noteText.trim()) {
+    return noteText;
+  }
+
+  return replyToText?.trim() ?? "";
 }
 
 interface TelegramUpdate {
@@ -55,7 +69,12 @@ export async function POST(request: NextRequest) {
 
   const note = extractTelegramNote(input);
   if (note !== null) {
-    const noteResult = await saveNoteToNotion(note.text, {
+    const noteText = resolveNoteTextFromMessage(
+      note.text,
+      message?.reply_to_message?.text
+    );
+
+    const noteResult = await saveNoteToNotion(noteText, {
       subpageName: note.subpageName,
     });
 
