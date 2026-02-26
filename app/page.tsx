@@ -140,7 +140,7 @@ const features = [
   {
     title: "Notion Notes",
     description:
-      "Prefix any Telegram message with * to save as a note, or `*<name>,` to save to a subpage in Notes with that name.",
+      "Prefix any Telegram message with * to save as a note, use `*<name>,` to save to a subpage in Notes, or reply with `*` to save the message you replied to.",
     slug: "notion",
   },
   {
@@ -183,9 +183,9 @@ const howItWorks = [
   {
     title: "Notion Notes",
     description:
-      "Messages that start with * (asterisk) are saved as notes in your Notion page. Use `*<name>,` to save to a subpage in Notes with that given name.",
+      "Messages that start with * (asterisk) are saved as notes in your Notion page. Use `*<name>,` to save to a subpage in Notes, or reply with `*` to capture the replied message as a note.",
     example:
-      '*Call back John re: project scope by Friday → appended to main Notes. *Work, Review Q1 roadmap → saved to subpage "Work" under Notes.',
+      '*Call back John re: project scope by Friday → appended to main Notes. *Work, Review Q1 roadmap → saved to subpage "Work" under Notes. Reply `*` to another message → that replied message is saved to Notes.',
   },
   {
     title: "Smart Scheduling",
