@@ -13,26 +13,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://email-ai-agent.vercel.app"),
+  metadataBase: new URL("https://agent.gbozhinov.com"),
   title: "Gmail + Telegram Assistant + Notion Notes",
   description:
     "Open-source Gmail AI agent. Run it yourself—deploy, configure, and get summaries in Telegram, assistant replies, and *-prefixed notes to Notion.",
   openGraph: {
+    type: "website",
     title: "Gmail + Telegram Assistant + Notion Notes",
     description:
       "Open-source Gmail AI agent. Run it yourself—deploy, configure, and get summaries in Telegram, assistant replies, and *-prefixed notes to Notion.",
-    images: [
-      {
-        url: "/logo.png",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Gmail + Telegram Assistant + Notion Notes",
     description:
       "Open-source Gmail AI agent. Run it yourself—deploy, configure, and get summaries in Telegram, assistant replies, and *-prefixed notes to Notion.",
-    images: ["/logo.png"],
   },
 };
 
