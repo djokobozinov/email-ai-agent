@@ -48,6 +48,7 @@ describe("summarizeEmail", () => {
         title: "Test Email Summary",
         bullets: ["Key point 1", "Key point 2"],
         isReceipt: false,
+        isImportant: false,
       },
     } as never);
 
@@ -57,6 +58,7 @@ describe("summarizeEmail", () => {
       title: "Test Email Summary",
       bullets: ["Key point 1", "Key point 2"],
       isReceipt: false,
+      isImportant: false,
     });
     expect(generateText).toHaveBeenCalledOnce();
   });
@@ -69,6 +71,7 @@ describe("summarizeEmail", () => {
         title: "Summary",
         bullets: [],
         isReceipt: false,
+        isImportant: false,
       },
     } as never);
 
@@ -86,6 +89,7 @@ describe("summarizeEmail", () => {
         title: "Summary",
         bullets: [],
         isReceipt: false,
+        isImportant: false,
       },
     } as never);
 
@@ -102,6 +106,7 @@ describe("summarizeEmail", () => {
         title: "🧾 Netflix $15.99 - Due Jan 25",
         bullets: [],
         isReceipt: true,
+        isImportant: true,
       },
     } as never);
 
@@ -111,7 +116,24 @@ describe("summarizeEmail", () => {
       title: "🧾 Netflix $15.99 - Due Jan 25",
       bullets: [],
       isReceipt: true,
+      isImportant: true,
     });
+  });
+
+  it("returns isImportant when email needs attention", async () => {
+    process.env.OPENAI_API_KEY = "sk-test-key";
+    vi.mocked(generateText).mockResolvedValue({
+      output: {
+        title: "Meeting tomorrow at 10am",
+        bullets: ["From: boss@company.com", "Action required"],
+        isReceipt: false,
+        isImportant: true,
+      },
+    } as never);
+
+    const result = await summarizeEmail(sampleEmail);
+
+    expect(result?.isImportant).toBe(true);
   });
 
   it("handles empty output and falls back to defaults", async () => {
@@ -121,6 +143,7 @@ describe("summarizeEmail", () => {
         title: undefined,
         bullets: "not-an-array",
         isReceipt: "true", // string "true" is not === true
+        isImportant: false,
       },
     } as never);
 
@@ -130,6 +153,7 @@ describe("summarizeEmail", () => {
       title: "No title",
       bullets: [],
       isReceipt: false, // only strict true becomes true
+      isImportant: false,
     });
   });
 
@@ -149,6 +173,7 @@ describe("summarizeEmail", () => {
         title: "Summary",
         bullets: [],
         isReceipt: false,
+        isImportant: false,
       },
     } as never);
 

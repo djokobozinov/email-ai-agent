@@ -46,7 +46,8 @@ function getCategoryEmoji(email: EmailMessage): string {
 }
 
 function formatMessage(email: EmailMessage, summary: Summary): string {
-  const prefix = getCategoryEmoji(email);
+  let prefix = getCategoryEmoji(email);
+  if (summary.isImportant) prefix += "⚡ ";
   if (summary.isReceipt) {
     return `${prefix}${email.from}
 ${email.subject}
