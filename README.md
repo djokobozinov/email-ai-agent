@@ -83,7 +83,7 @@ Copy `.env.example` to `.env` and set only what you need:
 | `TEST_PASSWORD` | Password for `/telegram-webhook`, `/telegram-test`, `/check-mail` |
 | `CRON_SECRET` | Optional bearer auth for external cron callers |
 | `TELEGRAM_WEBHOOK_SECRET` | Optional Telegram webhook header validation |
-| `MAX_EMAILS_PER_RUN`, `LABEL_FILTER` | Optional email-processing behavior |
+| `MAX_EMAILS_PER_RUN`, `LABEL_FILTER`, `EXCLUDE_CATEGORIES` | Optional email-processing behavior |
 
 ### Telegram Assistant Behavior
 
@@ -142,6 +142,7 @@ If email summaries are not configured, `/api/cron/process` returns `processed: 0
 - Skips very short emails (< 5 chars)
 - Social emails show 👥 prefix; promotions show 🏷️ prefix
 - Optional: set `LABEL_FILTER=IMPORTANT` to process only important label
+- Optional: set `EXCLUDE_CATEGORIES=promotions` to skip promotions; use `promotions,social` for both
 
 ## License
 

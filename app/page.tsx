@@ -101,6 +101,11 @@ const ENV_VARS_REFERENCE: {
     feature: "Email summaries",
   },
   {
+    name: "EXCLUDE_CATEGORIES",
+    description: "Optional; e.g. promotions or promotions,social",
+    feature: "Email summaries",
+  },
+  {
     name: "TELEGRAM_WEBHOOK_SECRET",
     description: "Optional header secret for webhook",
     feature: "Webhook",
@@ -403,7 +408,7 @@ export default function Home() {
                   "skips spam",
                   "skips < 5 char emails",
                   "👥 social · 🏷️ promotions",
-                  "optional LABEL_FILTER",
+                  "optional LABEL_FILTER, EXCLUDE_CATEGORIES",
                 ].map((item) => (
                   <li key={item} className="flex gap-2">
                     <span className="text-[#3fb950]">-</span>
