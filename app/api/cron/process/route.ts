@@ -53,11 +53,7 @@ export async function GET(request: NextRequest) {
         if (!email) continue;
 
         const summary = await summarizeEmail(email);
-        if (
-          !summary ||
-          (summary.bullets.length === 0 && !summary.isReceipt)
-        )
-          continue;
+        if (!summary) continue;
 
         const sent = await sendToTelegram(email, summary);
         if (sent) processed++;

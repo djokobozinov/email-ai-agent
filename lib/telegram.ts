@@ -54,13 +54,13 @@ ${email.subject}
 
 ${summary.title}`.trim();
   }
-  const bullets = summary.bullets
-    .map((b) => `– ${b}`)
-    .join("\n");
+  const bullets = summary.bullets.map((b) => `– ${b}`).join("\n");
+  const details = [summary.title, bullets].filter(Boolean).join("\n");
+
   return `${prefix}${email.from}
 ${email.subject}
 
-${bullets}`.trim();
+${details}`.trim();
 }
 
 export async function sendMessageToTelegramChat(
