@@ -3,6 +3,46 @@ import { buildGmailQuery, MIN_BODY_LENGTH } from "./filters";
 
 const MAX_ACCOUNTS = 5;
 
+type GmailMessagePart = {
+  mimeType?: string | null;
+  filename?: string | null;
+  headers?: { name?: string | null; value?: string | null }[] | null;
+  body?: { data?: string | null } | null;
+  parts?: GmailMessagePart[] | null;
+};
+
+function decodeBodyData(data: string): string {
+  return Buffer.from(data.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf-8");
+}
+
+function isAttachmentPart(part: GmailMessagePart): boolean {
+  if (part.filename?.trim()) return true;
+
+  const contentDisposition =
+    part.headers
+      ?.find((header) => header.name?.toLowerCase() === "content-disposition")
+      ?.value?.toLowerCase() ?? "";
+
+  return contentDisposition.includes("attachment");
+}
+
+function findTextPlainBody(part: GmailMessagePart): string {
+  if (isAttachmentPart(part)) {
+    return "";
+  }
+
+  if (part.mimeType === "text/plain" && part.body?.data) {
+    return decodeBodyData(part.body.data);
+  }
+
+  for (const childPart of part.parts ?? []) {
+    const body = findTextPlainBody(childPart);
+    if (body) return body;
+  }
+
+  return "";
+}
+
 function getRefreshTokenVar(accountId: number): string {
   return accountId === 1 ? "GOOGLE_REFRESH_TOKEN" : `GOOGLE_REFRESH_TOKEN_${accountId}`;
 }
@@ -97,17 +137,9 @@ export async function getMessage(
   const from = getHeader("From");
   const subject = getHeader("Subject");
 
-  let body = "";
-  if (payload.body?.data) {
-    body = Buffer.from(payload.body.data, "base64").toString("utf-8");
-  } else if (payload.parts) {
-    const textPart = payload.parts.find(
-      (p) => p.mimeType === "text/plain" && p.body?.data
-    );
-    if (textPart?.body?.data) {
-      body = Buffer.from(textPart.body.data, "base64").toString("utf-8");
-    }
-  }
+  const body = payload.body?.data
+    ? decodeBodyData(payload.body.data)
+    : findTextPlainBody(payload as GmailMessagePart);
 
   if (body.length < MIN_BODY_LENGTH) {
     return null;
