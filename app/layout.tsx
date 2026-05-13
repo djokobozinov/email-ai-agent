@@ -14,20 +14,20 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://agent.gbozhinov.com"),
-  title: "Gmail + Telegram Assistant + Notion Notes",
+  title: "gjoko-ai-agent",
   description:
-    "Open-source Gmail AI agent. Run it yourself—deploy, configure, and get summaries in Telegram, assistant replies, and *-prefixed notes to Notion.",
+    "Self-hosted personal AI agent for Telegram assistant replies, Notion notes, Gmail summaries, weather reports, and small automations.",
   openGraph: {
     type: "website",
-    title: "Gmail + Telegram Assistant + Notion Notes",
+    title: "gjoko-ai-agent",
     description:
-      "Open-source Gmail AI agent. Run it yourself—deploy, configure, and get summaries in Telegram, assistant replies, and *-prefixed notes to Notion.",
+      "Self-hosted personal AI agent for Telegram assistant replies, Notion notes, Gmail summaries, weather reports, and small automations.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gmail + Telegram Assistant + Notion Notes",
+    title: "gjoko-ai-agent",
     description:
-      "Open-source Gmail AI agent. Run it yourself—deploy, configure, and get summaries in Telegram, assistant replies, and *-prefixed notes to Notion.",
+      "Self-hosted personal AI agent for Telegram assistant replies, Notion notes, Gmail summaries, weather reports, and small automations.",
   },
 };
 

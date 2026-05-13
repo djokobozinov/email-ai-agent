@@ -1,28 +1,32 @@
-# Optional Gmail Summaries + Telegram Assistant + Notion Notes + Weather
+# gjoko-ai-agent
 
-Automated agent that can read new Gmail, summarize messages with OpenAI, send summaries to Telegram, reply to Telegram messages with an AI assistant, save `*`-prefixed Telegram notes to Notion, and send a daily Vransko weather clothing report. Minimal web UI for setup only. All features are optional and independently enabled via environment variables; no database.
+A self-hosted personal AI agent for small, useful automations across everyday tools. It can chat with you through Telegram, summarize Gmail, capture quick notes into Notion, send local weather clothing advice, and expose password-protected setup utilities. Each capability is optional and enabled independently with environment variables; there is no database.
 
 ## Features
 
-- Optional email summaries (Gmail API + OpenAI + Telegram destination chat)
-- Optional Telegram assistant replies (Telegram webhook + OpenAI)
-- Optional Telegram notes to Notion (messages starting with `*`, with optional subpages)
-- Optional daily Vransko weather report at 20:00 Europe/Ljubljana (Open-Meteo + Telegram)
-- Up to 5 Gmail accounts (same client ID/secret)
-- Password-protected utility pages (set webhook, Telegram test, manual check-mail)
-- Cron-based scheduling (every 30 minutes)
-- Minimal mobile-friendly UI for setup/status
+- **Telegram AI assistant**: message the bot and get OpenAI-powered replies in the same Telegram chat.
+- **Notion note capture**: save `*`-prefixed Telegram messages to a Notion notes page, including automatic subpages with `*<name>, <note>`.
+- **Reply-to-note capture**: reply to any Telegram message with `*` to save the replied message text into Notion.
+- **Gmail summaries**: connect up to 5 Gmail accounts with read-only OAuth and summarize unread messages with OpenAI.
+- **Telegram delivery**: receive Gmail summaries in Telegram, including category prefixes for social and promotions.
+- **Daily weather report**: get a 20:00 Europe/Ljubljana Vransko forecast with practical clothing advice for adults and kids.
+- **Cron automation**: run scheduled work every 30 minutes through Vercel Cron or any external cron caller.
+- **Manual utilities**: password-protected pages for setting the Telegram webhook, testing Telegram delivery, and manually checking mail.
+- **Feature readiness checks**: setup/status UI shows which optional modules are enabled and which env vars are missing.
+- **Email filtering controls**: limit processed mail with `MAX_EMAILS_PER_RUN`, `LABEL_FILTER`, and `EXCLUDE_CATEGORIES`.
+- **Webhook security**: optional Telegram webhook secret validation.
+- **No database**: configuration is env-var driven, keeping the deployment simple and portable.
 
 ## Feature Optionality
 
 There are **no globally required env vars**. Each feature enables itself only when its own required variables are present.
 
-- **Email summaries (Gmail → OpenAI → Telegram chat)** require:
-  `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, at least one of `GOOGLE_REFRESH_TOKEN`..`GOOGLE_REFRESH_TOKEN_5`, `OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
 - **Telegram assistant replies** require:
   `TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`
 - **Telegram `*` notes to Notion** require:
   `TELEGRAM_BOT_TOKEN`, `NOTION_API_KEY`, `NOTION_NOTES_PAGE_ID`
+- **Email summaries (Gmail → OpenAI → Telegram chat)** require:
+  `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, at least one of `GOOGLE_REFRESH_TOKEN`..`GOOGLE_REFRESH_TOKEN_5`, `OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
 - **Daily Vransko weather report** requires:
   `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
 - **Utility pages**:
@@ -32,15 +36,7 @@ There are **no globally required env vars**. Each feature enables itself only wh
 
 ## Setup
 
-### 1. Google Cloud (Optional: only for email summaries)
-
-1. Create a project in [Google Cloud Console](https://console.cloud.google.com)
-2. Enable **Gmail API**
-3. Configure OAuth consent screen (External, add your email as test user)
-4. Create OAuth 2.0 credentials (Desktop app or Web application)
-5. Add redirect URI: `https://your-domain.com/api/auth/gmail` (or `http://localhost:3000/api/auth/gmail` for local dev)
-
-### 2. Telegram Bot (Optional: needed for Telegram features)
+### 1. Telegram Bot (Optional: needed for Telegram features)
 
 1. Message [@BotFather](https://t.me/BotFather) to create a bot; copy the token
 2. Message [@userinfobot](https://t.me/userinfobot) to get your chat ID
@@ -56,11 +52,11 @@ There are **no globally required env vars**. Each feature enables itself only wh
      -d "secret_token=<TELEGRAM_WEBHOOK_SECRET>"
    ```
 
-### 2.5 Notion Notes (Optional)
+### 2. Notion Notes (Optional)
 
 If you want Telegram messages that start with `*` to be stored as notes:
 
-1. Create a Notion integration in **Settings & members → Integrations**
+1. Create a Notion integration in **Settings & members -> Integrations**
 2. Copy the integration secret into `NOTION_API_KEY`
 3. Create or choose a Notion page to hold notes (this is the root Notes page)
 4. Share that page with your integration (so it has write access)
@@ -69,7 +65,15 @@ If you want Telegram messages that start with `*` to be stored as notes:
    - `*<name>, <note>` saves into subpage `<name>` under your root Notes page
    - If subpage `<name>` does not exist yet, it is created automatically
 
-### 3. Environment Variables
+### 3. Google Cloud (Optional: only for Gmail summaries)
+
+1. Create a project in [Google Cloud Console](https://console.cloud.google.com)
+2. Enable **Gmail API**
+3. Configure OAuth consent screen (External, add your email as test user)
+4. Create OAuth 2.0 credentials (Desktop app or Web application)
+5. Add redirect URI: `https://your-domain.com/api/auth/gmail` (or `http://localhost:3000/api/auth/gmail` for local dev)
+
+### 4. Environment Variables
 
 Copy `.env.example` to `.env` and set only what you need:
 
@@ -100,7 +104,7 @@ The daily weather report uses Open-Meteo and needs no weather API key. It sends 
 - Otherwise, the app sends the text to OpenAI (default model: `gpt-5-nano`).
 - The app sends a confirmation/reply back to the same Telegram chat.
 
-### 4. Get Gmail Refresh Tokens (Optional)
+### 5. Get Gmail Refresh Tokens (Optional)
 
 Use the same Google OAuth client for all accounts. Each account gets its own refresh token.
 
@@ -112,7 +116,7 @@ Use the same Google OAuth client for all accounts. Each account gets its own ref
 6. Add each token as `GOOGLE_REFRESH_TOKEN_2`, `GOOGLE_REFRESH_TOKEN_3`, etc.
 7. Restart the app
 
-### 5. Disconnect Gmail (Optional)
+### 6. Disconnect Gmail (Optional)
 
 To remove a Gmail account, delete its `GOOGLE_REFRESH_TOKEN` (or `GOOGLE_REFRESH_TOKEN_N`) from your environment and restart.
 

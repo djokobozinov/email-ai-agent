@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Gmail + Telegram Assistant + Notion Notes - Open-source Gmail AI agent";
+export const alt = "gjoko-ai-agent - self-hosted personal AI agent";
 export const size = {
   width: 1200,
   height: 630,
@@ -39,7 +39,7 @@ export default async function Image() {
               lineHeight: 1.2,
             }}
           >
-            Gmail AI Agent
+            gjoko-ai-agent
           </div>
         </div>
         <div
@@ -50,7 +50,7 @@ export default async function Image() {
             maxWidth: "900px",
           }}
         >
-          Email summaries • Telegram assistant • Notion notes
+          Telegram assistant • Notion notes • Gmail summaries • Weather
         </div>
         <div
           style={{
