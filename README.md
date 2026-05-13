@@ -1,12 +1,13 @@
-# Optional Gmail Summaries + Telegram Assistant + Notion Notes
+# Optional Gmail Summaries + Telegram Assistant + Notion Notes + Weather
 
-Automated agent that can read new Gmail, summarize messages with OpenAI, send summaries to Telegram, reply to Telegram messages with an AI assistant, and save `*`-prefixed Telegram notes to Notion. Minimal web UI for setup only. All features are optional and independently enabled via environment variables; no database.
+Automated agent that can read new Gmail, summarize messages with OpenAI, send summaries to Telegram, reply to Telegram messages with an AI assistant, save `*`-prefixed Telegram notes to Notion, and send a daily Vransko weather clothing report. Minimal web UI for setup only. All features are optional and independently enabled via environment variables; no database.
 
 ## Features
 
 - Optional email summaries (Gmail API + OpenAI + Telegram destination chat)
 - Optional Telegram assistant replies (Telegram webhook + OpenAI)
 - Optional Telegram notes to Notion (messages starting with `*`, with optional subpages)
+- Optional daily Vransko weather report at 20:00 Europe/Ljubljana (Open-Meteo + Telegram)
 - Up to 5 Gmail accounts (same client ID/secret)
 - Password-protected utility pages (set webhook, Telegram test, manual check-mail)
 - Cron-based scheduling (every 30 minutes)
@@ -22,6 +23,8 @@ There are **no globally required env vars**. Each feature enables itself only wh
   `TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`
 - **Telegram `*` notes to Notion** require:
   `TELEGRAM_BOT_TOKEN`, `NOTION_API_KEY`, `NOTION_NOTES_PAGE_ID`
+- **Daily Vransko weather report** requires:
+  `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
 - **Utility pages**:
   - `/telegram-test`: `TEST_PASSWORD`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
   - `/telegram-webhook`: `TEST_PASSWORD`, `APP_URL`, `TELEGRAM_BOT_TOKEN`
@@ -84,6 +87,8 @@ Copy `.env.example` to `.env` and set only what you need:
 | `CRON_SECRET` | Optional bearer auth for external cron callers |
 | `TELEGRAM_WEBHOOK_SECRET` | Optional Telegram webhook header validation |
 | `MAX_EMAILS_PER_RUN`, `LABEL_FILTER`, `EXCLUDE_CATEGORIES` | Optional email-processing behavior |
+
+The daily weather report uses Open-Meteo and needs no weather API key. It sends tomorrow's Vransko forecast and short clothing advice for adults and kids at 20:00 Europe/Ljubljana.
 
 ### Telegram Assistant Behavior
 

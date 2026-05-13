@@ -40,6 +40,11 @@ const TELEGRAM_WEBHOOK_SETUP_REQUIRED_VARS = [
   "TELEGRAM_BOT_TOKEN",
 ] as const;
 
+const DAILY_WEATHER_REPORT_REQUIRED_VARS = [
+  "TELEGRAM_BOT_TOKEN",
+  "TELEGRAM_CHAT_ID",
+] as const;
+
 function hasConfiguredValue(name: string): boolean {
   return !!process.env[name]?.trim();
 }
@@ -74,6 +79,7 @@ export interface OptionalFeaturesStatus {
   notionNotes: FeatureReadiness;
   telegramTest: FeatureReadiness;
   telegramWebhookSetup: FeatureReadiness;
+  dailyWeatherReport: FeatureReadiness;
 }
 
 export function getEmailSummaryFeatureReadiness(): FeatureReadiness {
@@ -100,6 +106,10 @@ export function getTelegramWebhookSetupFeatureReadiness(): FeatureReadiness {
   return getFeatureReadiness(TELEGRAM_WEBHOOK_SETUP_REQUIRED_VARS);
 }
 
+export function getDailyWeatherReportFeatureReadiness(): FeatureReadiness {
+  return getFeatureReadiness(DAILY_WEATHER_REPORT_REQUIRED_VARS);
+}
+
 export function getOptionalFeaturesStatus(): OptionalFeaturesStatus {
   return {
     emailSummaries: getEmailSummaryFeatureReadiness(),
@@ -107,6 +117,7 @@ export function getOptionalFeaturesStatus(): OptionalFeaturesStatus {
     notionNotes: getNotionNotesFeatureReadiness(),
     telegramTest: getTelegramTestFeatureReadiness(),
     telegramWebhookSetup: getTelegramWebhookSetupFeatureReadiness(),
+    dailyWeatherReport: getDailyWeatherReportFeatureReadiness(),
   };
 }
 

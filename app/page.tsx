@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 
 const navLinks = [
@@ -26,6 +25,7 @@ interface AccountStatus {
     notionNotes: FeatureReadiness;
     telegramTest: FeatureReadiness;
     telegramWebhookSetup: FeatureReadiness;
+    dailyWeatherReport: FeatureReadiness;
   };
   missing?: string[];
 }
@@ -149,6 +149,12 @@ const features = [
     slug: "notion",
   },
   {
+    title: "Daily Weather Report",
+    description:
+      "Every evening at 20:00, sends a short Vransko forecast with practical clothing advice for you and the kids.",
+    slug: "weather",
+  },
+  {
     title: "Smart Scheduling",
     description:
       "Cron-based automation checks your inboxes every 30 minutes. Deploy on Vercel or use any external cron service.",
@@ -191,6 +197,13 @@ const howItWorks = [
       "Messages that start with * (asterisk) are saved as notes in your Notion page. Use `*<name>,` to save to a subpage in Notes, or reply with `*` to capture the replied message as a note.",
     example:
       '*Call back John re: project scope by Friday → appended to main Notes. *Work, Review Q1 roadmap → saved to subpage "Work" under Notes. Reply `*` to another message → that replied message is saved to Notes.',
+  },
+  {
+    title: "Daily Weather Report",
+    description:
+      "The cron route checks local Ljubljana time and, at 20:00, gets tomorrow's Vransko forecast from Open-Meteo.",
+    example:
+      "Vransko tomorrow: 8-16°C, rain 50%, wind 18 km/h. Dress: warm layers; waterproof jackets for the kids.",
   },
   {
     title: "Smart Scheduling",
@@ -325,10 +338,10 @@ export default function Home() {
           </p>
           <div className="mb-6 rounded-md border border-[#30363d] bg-[#161b22] p-4">
             <p className="text-[#8b949e]">
-              <span className="text-[#7d8590]">//</span> Deploy, configure env
+              <span className="text-[#7d8590]">{"//"}</span> Deploy, configure env
               vars, connect Gmail via OAuth.
               <br />
-              <span className="text-[#7d8590]">//</span> Cron runs every 30min.
+              <span className="text-[#7d8590]">{"//"}</span> Cron runs every 30min.
               Summaries hit your Telegram.{" "}
               <code className="text-[#bc8cff]">*</code> prefix saves to Notion.
             </p>
@@ -386,7 +399,7 @@ export default function Home() {
                 <h3 className="mb-2 font-semibold text-white">{item.title}</h3>
                 <p className="mb-3 text-[#8b949e]">{item.description}</p>
                 <div className="rounded border border-[#21262d] bg-[#0d1117] px-3 py-2">
-                  <span className="text-[#7d8590]">// example:</span>
+                  <span className="text-[#7d8590]">{"// example:"}</span>
                   <p className="mt-1 text-[#8b949e]">{item.example}</p>
                 </div>
               </div>
@@ -467,6 +480,7 @@ export default function Home() {
                         ["notionNotes", "notion"],
                         ["telegramTest", "telegram-test"],
                         ["telegramWebhookSetup", "webhook"],
+                        ["dailyWeatherReport", "weather"],
                       ]
                         .filter(
                           ([key]) =>
@@ -474,7 +488,7 @@ export default function Home() {
                               key as keyof typeof status.features
                             ]?.enabled,
                         )
-                        .map(([_, label]) => (
+                        .map(([, label]) => (
                           <span
                             key={label}
                             className="rounded border border-[#30363d] bg-[#21262d] px-2 py-0.5 text-xs text-[#8b949e]"
@@ -505,6 +519,8 @@ export default function Home() {
                           ...(status.features.notionNotes?.missing ?? []),
                           ...(status.features.telegramTest?.missing ?? []),
                           ...(status.features.telegramWebhookSetup?.missing ??
+                            []),
+                          ...(status.features.dailyWeatherReport?.missing ??
                             []),
                         ]
                       : (status.missing ?? []);

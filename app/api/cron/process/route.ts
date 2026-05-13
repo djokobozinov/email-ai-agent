@@ -4,9 +4,16 @@ import {
   listUnreadMessageIds,
   getMessage,
 } from "@/lib/gmail";
-import { getEmailSummaryFeatureReadiness } from "@/lib/features";
+import {
+  getDailyWeatherReportFeatureReadiness,
+  getEmailSummaryFeatureReadiness,
+} from "@/lib/features";
 import { summarizeEmail } from "@/lib/summarizer";
-import { sendToTelegram } from "@/lib/telegram";
+import { sendRawMessage, sendToTelegram } from "@/lib/telegram";
+import {
+  getVranskoWeatherReport,
+  shouldSendDailyWeatherReport,
+} from "@/lib/weather";
 
 function isAuthorized(request: NextRequest): boolean {
   const authHeader = request.headers.get("authorization");
@@ -22,49 +29,72 @@ export async function GET(request: NextRequest) {
   }
 
   const emailFeature = getEmailSummaryFeatureReadiness();
-  if (!emailFeature.enabled) {
-    return NextResponse.json({
-      processed: 0,
-      skipped: true,
-      reason:
-        "Email summary feature is disabled because required configuration is missing.",
-      missing: emailFeature.missing,
-    });
-  }
-
+  const weatherFeature = getDailyWeatherReportFeatureReadiness();
   let processed = 0;
-  const accountIds = getConfiguredAccountIds();
+  let weatherSent = false;
+  const weatherDue = shouldSendDailyWeatherReport();
 
-  for (const accountId of accountIds) {
-    let ids: string[] = [];
-    try {
-      ids = await listUnreadMessageIds(accountId);
-    } catch (err) {
-      console.error(
-        `Gmail list error (account ${accountId}):`,
-        err instanceof Error ? err.message : "Unknown"
-      );
-      continue;
-    }
+  if (emailFeature.enabled) {
+    const accountIds = getConfiguredAccountIds();
 
-    for (const id of ids) {
+    for (const accountId of accountIds) {
+      let ids: string[] = [];
       try {
-        const email = await getMessage(id, accountId);
-        if (!email) continue;
-
-        const summary = await summarizeEmail(email);
-        if (!summary) continue;
-
-        const sent = await sendToTelegram(email, summary);
-        if (sent) processed++;
+        ids = await listUnreadMessageIds(accountId);
       } catch (err) {
         console.error(
-          "Email processing error:",
+          `Gmail list error (account ${accountId}):`,
           err instanceof Error ? err.message : "Unknown"
         );
+        continue;
+      }
+
+      for (const id of ids) {
+        try {
+          const email = await getMessage(id, accountId);
+          if (!email) continue;
+
+          const summary = await summarizeEmail(email);
+          if (!summary) continue;
+
+          const sent = await sendToTelegram(email, summary);
+          if (sent) processed++;
+        } catch (err) {
+          console.error(
+            "Email processing error:",
+            err instanceof Error ? err.message : "Unknown"
+          );
+        }
       }
     }
   }
 
-  return NextResponse.json({ processed });
+  if (weatherFeature.enabled && weatherDue) {
+    const report = await getVranskoWeatherReport();
+    weatherSent = report ? await sendRawMessage(report) : false;
+  }
+
+  return NextResponse.json({
+    processed,
+    email: emailFeature.enabled
+      ? { enabled: true }
+      : {
+          enabled: false,
+          skipped: true,
+          reason:
+            "Email summary feature is disabled because required configuration is missing.",
+          missing: emailFeature.missing,
+        },
+    weather: weatherFeature.enabled
+      ? { enabled: true, due: weatherDue, sent: weatherSent }
+      : {
+          enabled: false,
+          due: weatherDue,
+          sent: false,
+          skipped: true,
+          reason:
+            "Daily weather report feature is disabled because required configuration is missing.",
+          missing: weatherFeature.missing,
+        },
+  });
 }

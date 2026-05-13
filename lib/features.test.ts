@@ -24,6 +24,7 @@ describe("feature readiness", () => {
     delete process.env.NOTION_NOTES_PAGE_ID;
     delete process.env.TEST_PASSWORD;
     delete process.env.APP_URL;
+    delete process.env.TELEGRAM_WEBHOOK_SECRET;
   });
 
   afterEach(() => {
@@ -75,5 +76,17 @@ describe("feature readiness", () => {
 
     expect(status.telegramAssistant.enabled).toBe(true);
     expect(hasAnyEnabledFeature(status)).toBe(true);
+  });
+
+  it("enables daily weather reports with telegram delivery configured", () => {
+    process.env.TELEGRAM_BOT_TOKEN = "telegram-bot-token";
+    process.env.TELEGRAM_CHAT_ID = "12345";
+
+    const status = getOptionalFeaturesStatus();
+
+    expect(status.dailyWeatherReport).toEqual({
+      enabled: true,
+      missing: [],
+    });
   });
 });
