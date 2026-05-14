@@ -3,6 +3,9 @@ const VRANSKO_LONGITUDE = 14.9514;
 const WEATHER_TIMEZONE = "Europe/Ljubljana";
 const REPORT_HOUR = 20;
 const IMPORTANT_LOOKAHEAD_HOURS = 6;
+const MORNING_START_HOUR = 6;
+const AFTERNOON_START_HOUR = 12;
+const EVENING_START_HOUR = 18;
 
 interface OpenMeteoHourlyForecast {
   time: string[];
@@ -26,6 +29,7 @@ interface DailyWeatherSummary {
   maxPrecipitationProbability: number;
   maxWindSpeed: number;
   weatherCode: number;
+  periods: WeatherPeriodSummary[];
 }
 
 interface ImportantWeatherHour {
@@ -36,6 +40,15 @@ interface ImportantWeatherHour {
   weatherCode: number;
   windSpeed: number;
   reasons: string[];
+}
+
+interface WeatherPeriodSummary {
+  name: "morning" | "afternoon" | "evening";
+  minTemperature: number;
+  maxTemperature: number;
+  maxPrecipitationProbability: number;
+  maxWindSpeed: number;
+  weatherCode: number;
 }
 
 function getLocalDateKey(date: Date): string {
@@ -86,6 +99,27 @@ function getWeatherLabel(code: number): string {
   return "mixed weather";
 }
 
+function getHourFromForecastTime(time: string): number | null {
+  const hour = Number(time.slice(11, 13));
+  return Number.isFinite(hour) ? hour : null;
+}
+
+function getPeriodName(hour: number): WeatherPeriodSummary["name"] | null {
+  if (hour >= MORNING_START_HOUR && hour < AFTERNOON_START_HOUR) {
+    return "morning";
+  }
+
+  if (hour >= AFTERNOON_START_HOUR && hour < EVENING_START_HOUR) {
+    return "afternoon";
+  }
+
+  if (hour >= EVENING_START_HOUR) {
+    return "evening";
+  }
+
+  return null;
+}
+
 function getMostImportantWeatherCode(codes: number[]): number {
   const priority = [
     99, 96, 95, 86, 85, 82, 81, 80, 77, 75, 73, 71, 67, 66, 65, 63, 61, 57,
@@ -93,6 +127,46 @@ function getMostImportantWeatherCode(codes: number[]): number {
   ];
 
   return priority.find((code) => codes.includes(code)) ?? codes[0] ?? 0;
+}
+
+function summarizeWeatherPeriods(
+  hourly: OpenMeteoHourlyForecast,
+  indexes: number[]
+): WeatherPeriodSummary[] {
+  const periodNames: WeatherPeriodSummary["name"][] = [
+    "morning",
+    "afternoon",
+    "evening",
+  ];
+
+  return periodNames
+    .map((name) => {
+      const periodIndexes = indexes.filter((index) => {
+        const hour = getHourFromForecastTime(hourly.time[index]);
+        return hour !== null && getPeriodName(hour) === name;
+      });
+
+      if (periodIndexes.length === 0) return null;
+
+      const temperatures = periodIndexes.map(
+        (index) => hourly.temperature_2m[index]
+      );
+      const precipitation = periodIndexes.map(
+        (index) => hourly.precipitation_probability[index]
+      );
+      const wind = periodIndexes.map((index) => hourly.wind_speed_10m[index]);
+      const codes = periodIndexes.map((index) => hourly.weather_code[index]);
+
+      return {
+        name,
+        minTemperature: Math.round(Math.min(...temperatures)),
+        maxTemperature: Math.round(Math.max(...temperatures)),
+        maxPrecipitationProbability: Math.round(Math.max(...precipitation)),
+        maxWindSpeed: Math.round(Math.max(...wind)),
+        weatherCode: getMostImportantWeatherCode(codes),
+      };
+    })
+    .filter((period): period is WeatherPeriodSummary => period !== null);
 }
 
 function summarizeTomorrowWeather(
@@ -135,10 +209,11 @@ function summarizeTomorrowWeather(
     maxPrecipitationProbability: Math.round(Math.max(...precipitation)),
     maxWindSpeed: Math.round(Math.max(...wind)),
     weatherCode: getMostImportantWeatherCode(codes),
+    periods: summarizeWeatherPeriods(hourly as OpenMeteoHourlyForecast, indexes),
   };
 }
 
-function buildDressAdvice(summary: DailyWeatherSummary): string {
+function buildAdultDressAdvice(summary: DailyWeatherSummary): string {
   const effectiveMax = Math.min(summary.maxTemperature, summary.maxFeelsLike);
   const effectiveMin = Math.min(summary.minTemperature, summary.minFeelsLike);
   const advice: string[] = [];
@@ -156,7 +231,7 @@ function buildDressAdvice(summary: DailyWeatherSummary): string {
   }
 
   if (summary.maxPrecipitationProbability >= 50) {
-    advice.push("waterproof jackets for the kids");
+    advice.push("waterproof jacket or umbrella");
   } else if (summary.maxPrecipitationProbability >= 30) {
     advice.push("pack a rain jacket");
   }
@@ -172,6 +247,53 @@ function buildDressAdvice(summary: DailyWeatherSummary): string {
   return advice.join("; ");
 }
 
+function buildKidsDressAdvice(summary: DailyWeatherSummary): string {
+  const effectiveMax = Math.min(summary.maxTemperature, summary.maxFeelsLike);
+  const effectiveMin = Math.min(summary.minTemperature, summary.minFeelsLike);
+  const advice: string[] = [];
+
+  if (effectiveMax <= 5) {
+    advice.push("warm winter coats, hats, gloves and sturdy shoes");
+  } else if (effectiveMax <= 12) {
+    advice.push("warm jackets, long sleeves and an extra layer");
+  } else if (effectiveMax <= 18) {
+    advice.push("hoodies or light jackets over comfortable clothes");
+  } else if (effectiveMin <= 12) {
+    advice.push("t-shirts with a hoodie or jacket for the morning");
+  } else {
+    advice.push("light clothes and comfortable shoes");
+  }
+
+  if (summary.maxPrecipitationProbability >= 50) {
+    advice.push("waterproof jackets or rain suits");
+  } else if (summary.maxPrecipitationProbability >= 30) {
+    advice.push("pack a small rain jacket");
+  }
+
+  if (summary.maxWindSpeed >= 35) {
+    advice.push("hoods that stay secure in wind");
+  }
+
+  if ([71, 73, 75, 77, 85, 86].includes(summary.weatherCode)) {
+    advice.push("boots if snow sticks");
+  }
+
+  return advice.join("; ");
+}
+
+function formatPeriodSummary(period: WeatherPeriodSummary): string {
+  const temperature =
+    period.minTemperature === period.maxTemperature
+      ? `${period.maxTemperature}°C`
+      : `${period.minTemperature}-${period.maxTemperature}°C`;
+
+  return `${period.name} ${temperature}, ${getWeatherLabel(
+    period.weatherCode
+  )}, rain ${period.maxPrecipitationProbability}%, wind ${
+    period.maxWindSpeed
+  } km/h`;
+}
+
 export function shouldSendDailyWeatherReport(now = new Date()): boolean {
   const { hour, minute } = getLocalTimeParts(now);
   return hour === REPORT_HOUR && minute === 0;
@@ -183,11 +305,17 @@ export function shouldCheckHourlyWeatherUpdate(now = new Date()): boolean {
 
 export function formatWeatherReport(summary: DailyWeatherSummary): string {
   const label = getWeatherLabel(summary.weatherCode);
-  const advice = buildDressAdvice(summary);
+  const adultAdvice = buildAdultDressAdvice(summary);
+  const kidsAdvice = buildKidsDressAdvice(summary);
+  const periods =
+    summary.periods.length > 0
+      ? summary.periods.map(formatPeriodSummary).join("; ")
+      : `tomorrow ${summary.minTemperature}-${summary.maxTemperature}°C, ${label}, rain ${summary.maxPrecipitationProbability}%, wind ${summary.maxWindSpeed} km/h`;
 
   return [
-    `Vransko tomorrow: ${summary.minTemperature}-${summary.maxTemperature}°C, ${label}, rain ${summary.maxPrecipitationProbability}%, wind ${summary.maxWindSpeed} km/h.`,
-    `Dress: ${advice}.`,
+    `Vransko tomorrow: ${periods}. Overall ${summary.minTemperature}-${summary.maxTemperature}°C and ${label}.`,
+    `Wear: ${adultAdvice}.`,
+    `Kids: ${kidsAdvice}.`,
   ].join("\n");
 }
 
@@ -245,6 +373,23 @@ function getImportantWeatherReasons(hour: ImportantWeatherHour): string[] {
   return reasons;
 }
 
+function getForecastHourOffset(fromTime: string, toTime: string): number {
+  const from = Date.UTC(
+    Number(fromTime.slice(0, 4)),
+    Number(fromTime.slice(5, 7)) - 1,
+    Number(fromTime.slice(8, 10)),
+    Number(fromTime.slice(11, 13))
+  );
+  const to = Date.UTC(
+    Number(toTime.slice(0, 4)),
+    Number(toTime.slice(5, 7)) - 1,
+    Number(toTime.slice(8, 10)),
+    Number(toTime.slice(11, 13))
+  );
+
+  return Math.max(0, Math.round((to - from) / 60 / 60 / 1000));
+}
+
 function findImportantWeatherHours(
   forecast: OpenMeteoForecastResponse,
   now: Date
@@ -285,14 +430,56 @@ function findImportantWeatherHours(
     .filter((hour) => hour.reasons.length > 0);
 }
 
-function formatImportantWeatherUpdate(hours: ImportantWeatherHour[]): string {
+function getRelativeForecastPhrase(hourOffset: number): string {
+  if (hourOffset === 0) return "now";
+  if (hourOffset === 1) return "in 1 hour";
+  return `in ${hourOffset} hours`;
+}
+
+function formatImportantWeatherHeadline(
+  hour: ImportantWeatherHour,
+  hourOffset: number
+): string {
+  if ([95, 96, 99].includes(hour.weatherCode)) {
+    return `Storm is coming ${getRelativeForecastPhrase(hourOffset)}.`;
+  }
+
+  if (hour.windSpeed >= 45) {
+    return `Strong wind is coming ${getRelativeForecastPhrase(hourOffset)}.`;
+  }
+
+  if (hour.precipitationProbability >= 80) {
+    return `Heavy rain chance is coming ${getRelativeForecastPhrase(
+      hourOffset
+    )}.`;
+  }
+
+  if ([71, 73, 75, 77, 85, 86].includes(hour.weatherCode)) {
+    return `Snow is coming ${getRelativeForecastPhrase(hourOffset)}.`;
+  }
+
+  if (hour.feelsLike <= 0) {
+    return `Very cold weather is coming ${getRelativeForecastPhrase(
+      hourOffset
+    )}.`;
+  }
+
+  return `Important weather is coming ${getRelativeForecastPhrase(hourOffset)}.`;
+}
+
+function formatImportantWeatherUpdate(
+  hours: ImportantWeatherHour[],
+  now: Date
+): string {
   const mostUrgent = hours[0];
-  const label = getWeatherLabel(mostUrgent.weatherCode);
-  const time = mostUrgent.time.replace("T", " ");
+  const hourOffset = getForecastHourOffset(
+    getLocalHourKey(now),
+    mostUrgent.time
+  );
   const reasons = mostUrgent.reasons.join(", ");
 
   return [
-    `Important Vransko weather update: ${label} around ${time}.`,
+    formatImportantWeatherHeadline(mostUrgent, hourOffset),
     `${reasons}; ${mostUrgent.temperature}°C, feels like ${mostUrgent.feelsLike}°C.`,
   ].join("\n");
 }
@@ -305,7 +492,7 @@ export async function getVranskoImportantWeatherUpdate(
     longitude: String(VRANSKO_LONGITUDE),
     hourly:
       "temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m",
-    forecast_days: "1",
+    forecast_days: "2",
     timezone: WEATHER_TIMEZONE,
   });
 
@@ -316,7 +503,7 @@ export async function getVranskoImportantWeatherUpdate(
     const forecast = (await res.json()) as OpenMeteoForecastResponse;
     const importantHours = findImportantWeatherHours(forecast, now);
     return importantHours.length > 0
-      ? formatImportantWeatherUpdate(importantHours)
+      ? formatImportantWeatherUpdate(importantHours, now)
       : null;
   } catch (err) {
     console.error(
