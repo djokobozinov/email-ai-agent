@@ -6,10 +6,15 @@ import {
 } from "@/lib/gmail";
 import {
   getDailyWeatherReportFeatureReadiness,
+  getDailyCalendarReportFeatureReadiness,
   getEmailSummaryFeatureReadiness,
 } from "@/lib/features";
 import { summarizeEmail } from "@/lib/summarizer";
 import { sendRawMessage, sendToTelegram } from "@/lib/telegram";
+import {
+  getTomorrowCalendarReport,
+  shouldSendDailyCalendarReport,
+} from "@/lib/calendar";
 import {
   getVranskoWeatherReport,
   shouldSendDailyWeatherReport,
@@ -30,9 +35,12 @@ export async function GET(request: NextRequest) {
 
   const emailFeature = getEmailSummaryFeatureReadiness();
   const weatherFeature = getDailyWeatherReportFeatureReadiness();
+  const calendarFeature = getDailyCalendarReportFeatureReadiness();
   let processed = 0;
   let weatherSent = false;
+  let calendarSent = false;
   const weatherDue = shouldSendDailyWeatherReport();
+  const calendarDue = shouldSendDailyCalendarReport();
 
   if (emailFeature.enabled) {
     const accountIds = getConfiguredAccountIds();
@@ -74,6 +82,11 @@ export async function GET(request: NextRequest) {
     weatherSent = report ? await sendRawMessage(report) : false;
   }
 
+  if (calendarFeature.enabled && calendarDue) {
+    const report = await getTomorrowCalendarReport();
+    calendarSent = report ? await sendRawMessage(report) : false;
+  }
+
   return NextResponse.json({
     processed,
     email: emailFeature.enabled
@@ -95,6 +108,17 @@ export async function GET(request: NextRequest) {
           reason:
             "Daily weather report feature is disabled because required configuration is missing.",
           missing: weatherFeature.missing,
+        },
+    calendar: calendarFeature.enabled
+      ? { enabled: true, due: calendarDue, sent: calendarSent }
+      : {
+          enabled: false,
+          due: calendarDue,
+          sent: false,
+          skipped: true,
+          reason:
+            "Daily calendar report feature is disabled because required configuration is missing.",
+          missing: calendarFeature.missing,
         },
   });
 }

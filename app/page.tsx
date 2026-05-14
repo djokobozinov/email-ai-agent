@@ -26,6 +26,7 @@ interface AccountStatus {
     telegramTest: FeatureReadiness;
     telegramWebhookSetup: FeatureReadiness;
     dailyWeatherReport: FeatureReadiness;
+    dailyCalendarReport: FeatureReadiness;
   };
   missing?: string[];
 }
@@ -47,8 +48,23 @@ const ENV_VARS_REFERENCE: {
   },
   {
     name: "GOOGLE_REFRESH_TOKEN",
-    description: "One per Gmail account (use Setup Gmail)",
-    feature: "Email summaries",
+    description: "One per Google account (use Setup Gmail)",
+    feature: "Email & calendar",
+  },
+  {
+    name: "GOOGLE_CALENDAR_IDS",
+    description: "Optional comma-separated extra calendar IDs",
+    feature: "Calendar report",
+  },
+  {
+    name: "GOOGLE_HOLIDAY_CALENDAR_ID",
+    description: "Optional; defaults to Slovenian holidays",
+    feature: "Calendar report",
+  },
+  {
+    name: "GOOGLE_BIRTHDAY_CALENDAR_ID",
+    description: "Optional; defaults to Google birthdays",
+    feature: "Calendar report",
   },
   {
     name: "OPENAI_API_KEY",
@@ -149,6 +165,12 @@ const features = [
     slug: "weather",
   },
   {
+    title: "Daily Calendar Report",
+    description:
+      "Every evening at 20:00, sends tomorrow's calendar events, holidays, and birthdays to Telegram.",
+    slug: "calendar",
+  },
+  {
     title: "Smart Scheduling",
     description:
       "Cron-based automation runs recurring work every 30 minutes. Deploy on Vercel or use any external cron service.",
@@ -191,6 +213,13 @@ const howItWorks = [
       "The cron route checks local Ljubljana time and, at 20:00, gets tomorrow's Vransko forecast from Open-Meteo.",
     example:
       "Vransko tomorrow: 8-16°C, rain 50%, wind 18 km/h. Dress: warm layers; waterproof jackets for the kids.",
+  },
+  {
+    title: "Daily Calendar Report",
+    description:
+      "The same cron route reads Google Calendar with read-only OAuth and sends tomorrow's events, holidays, and birthdays to Telegram.",
+    example:
+      "Tomorrow (2026-05-14) Events: 09:00 Standup. Holidays: Ascension Day. Birthdays: Ana's birthday.",
   },
   {
     title: "Smart Scheduling",
@@ -468,6 +497,7 @@ export default function Home() {
                         ["telegramTest", "telegram-test"],
                         ["telegramWebhookSetup", "webhook"],
                         ["dailyWeatherReport", "weather"],
+                        ["dailyCalendarReport", "calendar"],
                       ]
                         .filter(
                           ([key]) =>
@@ -490,6 +520,13 @@ export default function Home() {
                     <code className="text-[#bc8cff]">GOOGLE_REFRESH_TOKEN</code>{" "}
                     from env.
                   </p>
+                  <a
+                    href="/api/auth/gmail?action=init"
+                    className="inline-flex items-center gap-1 rounded border border-[#30363d] bg-[#21262d] px-3 py-2 text-white hover:border-[#58a6ff]"
+                  >
+                    <span className="text-[#3fb950]">$</span> Reconnect Google
+                    Calendar
+                  </a>
                 </div>
               )}
               {status && !status.configured && (
@@ -508,6 +545,8 @@ export default function Home() {
                           ...(status.features.telegramWebhookSetup?.missing ??
                             []),
                           ...(status.features.dailyWeatherReport?.missing ??
+                            []),
+                          ...(status.features.dailyCalendarReport?.missing ??
                             []),
                         ]
                       : (status.missing ?? []);
@@ -545,6 +584,11 @@ export default function Home() {
               <h3 className="mb-3 font-semibold text-white">Quick Actions</h3>
               <div className="space-y-2">
                 {[
+                  {
+                    href: "/api/auth/gmail?action=init",
+                    label: "Reconnect Google Calendar",
+                    desc: "Refresh OAuth",
+                  },
                   {
                     href: "/telegram-webhook",
                     label: "Set Telegram Webhook",

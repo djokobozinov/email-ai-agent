@@ -10,6 +10,7 @@ A self-hosted personal AI agent for small, useful automations across everyday to
 - **Gmail summaries**: connect up to 5 Gmail accounts with read-only OAuth and summarize unread messages with OpenAI.
 - **Telegram delivery**: receive Gmail summaries in Telegram, including category prefixes for social and promotions.
 - **Daily weather report**: get a 20:00 Europe/Ljubljana Vransko forecast with practical clothing advice for adults and kids.
+- **Daily calendar report**: get a 20:00 Europe/Ljubljana Telegram message with tomorrow's Google Calendar events, holidays, and birthdays.
 - **Cron automation**: run scheduled work every 30 minutes through Vercel Cron or any external cron caller.
 - **Manual utilities**: password-protected pages for setting the Telegram webhook, testing Telegram delivery, and manually checking mail.
 - **Feature readiness checks**: setup/status UI shows which optional modules are enabled and which env vars are missing.
@@ -29,6 +30,8 @@ There are **no globally required env vars**. Each feature enables itself only wh
   `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, at least one of `GOOGLE_REFRESH_TOKEN`..`GOOGLE_REFRESH_TOKEN_5`, `OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
 - **Daily Vransko weather report** requires:
   `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
+- **Daily calendar report** requires:
+  `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, at least one of `GOOGLE_REFRESH_TOKEN`..`GOOGLE_REFRESH_TOKEN_5`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
 - **Utility pages**:
   - `/telegram-test`: `TEST_PASSWORD`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
   - `/telegram-webhook`: `TEST_PASSWORD`, `APP_URL`, `TELEGRAM_BOT_TOKEN`
@@ -65,10 +68,10 @@ If you want Telegram messages that start with `*` to be stored as notes:
    - `*<name>, <note>` saves into subpage `<name>` under your root Notes page
    - If subpage `<name>` does not exist yet, it is created automatically
 
-### 3. Google Cloud (Optional: only for Gmail summaries)
+### 3. Google Cloud (Optional: for Gmail summaries and calendar reports)
 
 1. Create a project in [Google Cloud Console](https://console.cloud.google.com)
-2. Enable **Gmail API**
+2. Enable **Gmail API** and **Google Calendar API**
 3. Configure OAuth consent screen (External, add your email as test user)
 4. Create OAuth 2.0 credentials (Desktop app or Web application)
 5. Add redirect URI: `https://your-domain.com/api/auth/gmail` (or `http://localhost:3000/api/auth/gmail` for local dev)
@@ -80,7 +83,10 @@ Copy `.env.example` to `.env` and set only what you need:
 | Variable | Used by |
 |----------|---------|
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Gmail OAuth + email summaries |
-| `GOOGLE_REFRESH_TOKEN`..`GOOGLE_REFRESH_TOKEN_5` | Gmail accounts for email summaries |
+| `GOOGLE_REFRESH_TOKEN`..`GOOGLE_REFRESH_TOKEN_5` | Google accounts for email summaries and calendar reports |
+| `GOOGLE_CALENDAR_IDS` | Optional extra Google Calendar IDs, comma-separated |
+| `GOOGLE_HOLIDAY_CALENDAR_ID` | Optional holiday calendar ID; defaults to Slovenian holidays |
+| `GOOGLE_BIRTHDAY_CALENDAR_ID` | Optional birthday calendar ID; defaults to Google birthdays |
 | `OPENAI_API_KEY` | Email summaries + Telegram assistant |
 | `OPENAI_MODEL` | Optional model override (default `gpt-5-nano`) |
 | `TELEGRAM_BOT_TOKEN` | Telegram assistant, email delivery, webhook setup, Telegram test |
@@ -94,6 +100,8 @@ Copy `.env.example` to `.env` and set only what you need:
 
 The daily weather report uses Open-Meteo and needs no weather API key. It sends tomorrow's Vransko forecast and short clothing advice for adults and kids at 20:00 Europe/Ljubljana.
 
+The daily calendar report reads your primary Google Calendar plus optional extra calendars, the configured holiday calendar, and the configured birthday calendar. It sends tomorrow's events, holidays, and birthdays to Telegram at 20:00 Europe/Ljubljana.
+
 ### Telegram Assistant Behavior
 
 - When you send a text message to your bot, Telegram calls `/api/telegram/webhook`.
@@ -104,7 +112,7 @@ The daily weather report uses Open-Meteo and needs no weather API key. It sends 
 - Otherwise, the app sends the text to OpenAI (default model: `gpt-5-nano`).
 - The app sends a confirmation/reply back to the same Telegram chat.
 
-### 5. Get Gmail Refresh Tokens (Optional)
+### 5. Get Google Refresh Tokens (Optional)
 
 Use the same Google OAuth client for all accounts. Each account gets its own refresh token.
 
@@ -115,6 +123,8 @@ Use the same Google OAuth client for all accounts. Each account gets its own ref
 5. For more accounts, go to `/api/auth/gmail?action=init&account=2` (or 3, 4, 5)
 6. Add each token as `GOOGLE_REFRESH_TOKEN_2`, `GOOGLE_REFRESH_TOKEN_3`, etc.
 7. Restart the app
+
+Existing refresh tokens created before the calendar feature only have Gmail scope. Run setup again and replace the refresh token so Google grants Calendar read-only access too.
 
 ### 6. Disconnect Gmail (Optional)
 

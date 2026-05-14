@@ -45,6 +45,13 @@ const DAILY_WEATHER_REPORT_REQUIRED_VARS = [
   "TELEGRAM_CHAT_ID",
 ] as const;
 
+const DAILY_CALENDAR_REPORT_REQUIRED_VARS = [
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+  "TELEGRAM_BOT_TOKEN",
+  "TELEGRAM_CHAT_ID",
+] as const;
+
 function hasConfiguredValue(name: string): boolean {
   return !!process.env[name]?.trim();
 }
@@ -80,6 +87,7 @@ export interface OptionalFeaturesStatus {
   telegramTest: FeatureReadiness;
   telegramWebhookSetup: FeatureReadiness;
   dailyWeatherReport: FeatureReadiness;
+  dailyCalendarReport: FeatureReadiness;
 }
 
 export function getEmailSummaryFeatureReadiness(): FeatureReadiness {
@@ -110,6 +118,14 @@ export function getDailyWeatherReportFeatureReadiness(): FeatureReadiness {
   return getFeatureReadiness(DAILY_WEATHER_REPORT_REQUIRED_VARS);
 }
 
+export function getDailyCalendarReportFeatureReadiness(): FeatureReadiness {
+  const extraMissing = hasAtLeastOneRefreshToken()
+    ? []
+    : [EMAIL_SUMMARY_REFRESH_TOKEN_HINT];
+
+  return getFeatureReadiness(DAILY_CALENDAR_REPORT_REQUIRED_VARS, extraMissing);
+}
+
 export function getOptionalFeaturesStatus(): OptionalFeaturesStatus {
   return {
     emailSummaries: getEmailSummaryFeatureReadiness(),
@@ -118,6 +134,7 @@ export function getOptionalFeaturesStatus(): OptionalFeaturesStatus {
     telegramTest: getTelegramTestFeatureReadiness(),
     telegramWebhookSetup: getTelegramWebhookSetupFeatureReadiness(),
     dailyWeatherReport: getDailyWeatherReportFeatureReadiness(),
+    dailyCalendarReport: getDailyCalendarReportFeatureReadiness(),
   };
 }
 
