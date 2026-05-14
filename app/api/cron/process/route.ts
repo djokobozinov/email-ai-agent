@@ -16,7 +16,9 @@ import {
   shouldSendDailyCalendarReport,
 } from "@/lib/calendar";
 import {
+  getVranskoImportantWeatherUpdate,
   getVranskoWeatherReport,
+  shouldCheckHourlyWeatherUpdate,
   shouldSendDailyWeatherReport,
 } from "@/lib/weather";
 
@@ -38,8 +40,10 @@ export async function GET(request: NextRequest) {
   const calendarFeature = getDailyCalendarReportFeatureReadiness();
   let processed = 0;
   let weatherSent = false;
+  let importantWeatherSent = false;
   let calendarSent = false;
   const weatherDue = shouldSendDailyWeatherReport();
+  const importantWeatherDue = shouldCheckHourlyWeatherUpdate();
   const calendarDue = shouldSendDailyCalendarReport();
 
   if (emailFeature.enabled) {
@@ -82,6 +86,11 @@ export async function GET(request: NextRequest) {
     weatherSent = report ? await sendRawMessage(report) : false;
   }
 
+  if (weatherFeature.enabled && importantWeatherDue) {
+    const update = await getVranskoImportantWeatherUpdate();
+    importantWeatherSent = update ? await sendRawMessage(update) : false;
+  }
+
   if (calendarFeature.enabled && calendarDue) {
     const report = await getTomorrowCalendarReport();
     calendarSent = report ? await sendRawMessage(report) : false;
@@ -99,11 +108,23 @@ export async function GET(request: NextRequest) {
           missing: emailFeature.missing,
         },
     weather: weatherFeature.enabled
-      ? { enabled: true, due: weatherDue, sent: weatherSent }
+      ? {
+          enabled: true,
+          due: weatherDue,
+          sent: weatherSent,
+          importantUpdate: {
+            due: importantWeatherDue,
+            sent: importantWeatherSent,
+          },
+        }
       : {
           enabled: false,
           due: weatherDue,
           sent: false,
+          importantUpdate: {
+            due: importantWeatherDue,
+            sent: false,
+          },
           skipped: true,
           reason:
             "Daily weather report feature is disabled because required configuration is missing.",

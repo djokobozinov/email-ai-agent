@@ -2,6 +2,7 @@ const VRANSKO_LATITUDE = 46.2441;
 const VRANSKO_LONGITUDE = 14.9514;
 const WEATHER_TIMEZONE = "Europe/Ljubljana";
 const REPORT_HOUR = 20;
+const IMPORTANT_LOOKAHEAD_HOURS = 6;
 
 interface OpenMeteoHourlyForecast {
   time: string[];
@@ -27,6 +28,16 @@ interface DailyWeatherSummary {
   weatherCode: number;
 }
 
+interface ImportantWeatherHour {
+  time: string;
+  temperature: number;
+  feelsLike: number;
+  precipitationProbability: number;
+  weatherCode: number;
+  windSpeed: number;
+  reasons: string[];
+}
+
 function getLocalDateKey(date: Date): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: WEATHER_TIMEZONE,
@@ -50,6 +61,12 @@ function getLocalTimeParts(date: Date): { hour: number; minute: number } {
   );
 
   return { hour, minute };
+}
+
+function getLocalHourKey(date: Date): string {
+  const dateKey = getLocalDateKey(date);
+  const { hour } = getLocalTimeParts(date);
+  return `${dateKey}T${String(hour).padStart(2, "0")}:00`;
 }
 
 function getTomorrowDateKey(now: Date): string {
@@ -160,6 +177,10 @@ export function shouldSendDailyWeatherReport(now = new Date()): boolean {
   return hour === REPORT_HOUR && minute === 0;
 }
 
+export function shouldCheckHourlyWeatherUpdate(now = new Date()): boolean {
+  return getLocalTimeParts(now).minute === 0;
+}
+
 export function formatWeatherReport(summary: DailyWeatherSummary): string {
   const label = getWeatherLabel(summary.weatherCode);
   const advice = buildDressAdvice(summary);
@@ -192,6 +213,114 @@ export async function getVranskoWeatherReport(now = new Date()): Promise<
   } catch (err) {
     console.error(
       "Weather report error:",
+      err instanceof Error ? err.message : "Unknown"
+    );
+    return null;
+  }
+}
+
+function getImportantWeatherReasons(hour: ImportantWeatherHour): string[] {
+  const reasons: string[] = [];
+
+  if ([95, 96, 99].includes(hour.weatherCode)) {
+    reasons.push("thunderstorms");
+  }
+
+  if ([71, 73, 75, 77, 85, 86].includes(hour.weatherCode)) {
+    reasons.push("snow");
+  }
+
+  if (hour.precipitationProbability >= 80) {
+    reasons.push(`rain chance ${hour.precipitationProbability}%`);
+  }
+
+  if (hour.windSpeed >= 45) {
+    reasons.push(`wind ${hour.windSpeed} km/h`);
+  }
+
+  if (hour.feelsLike <= 0) {
+    reasons.push(`feels like ${hour.feelsLike}°C`);
+  }
+
+  return reasons;
+}
+
+function findImportantWeatherHours(
+  forecast: OpenMeteoForecastResponse,
+  now: Date
+): ImportantWeatherHour[] {
+  const hourly = forecast.hourly;
+  if (
+    !hourly?.time ||
+    !hourly.temperature_2m ||
+    !hourly.apparent_temperature ||
+    !hourly.precipitation_probability ||
+    !hourly.weather_code ||
+    !hourly.wind_speed_10m
+  ) {
+    return [];
+  }
+
+  const currentHourKey = getLocalHourKey(now);
+  const upcomingIndexes = hourly.time
+    .map((time, index) => ({ time, index }))
+    .filter(({ time }) => time >= currentHourKey)
+    .slice(0, IMPORTANT_LOOKAHEAD_HOURS);
+
+  return upcomingIndexes
+    .map(({ time, index }) => {
+      const hour: ImportantWeatherHour = {
+        time,
+        temperature: Math.round(hourly.temperature_2m![index]),
+        feelsLike: Math.round(hourly.apparent_temperature![index]),
+        precipitationProbability: Math.round(
+          hourly.precipitation_probability![index]
+        ),
+        weatherCode: hourly.weather_code![index],
+        windSpeed: Math.round(hourly.wind_speed_10m![index]),
+        reasons: [],
+      };
+      return { ...hour, reasons: getImportantWeatherReasons(hour) };
+    })
+    .filter((hour) => hour.reasons.length > 0);
+}
+
+function formatImportantWeatherUpdate(hours: ImportantWeatherHour[]): string {
+  const mostUrgent = hours[0];
+  const label = getWeatherLabel(mostUrgent.weatherCode);
+  const time = mostUrgent.time.replace("T", " ");
+  const reasons = mostUrgent.reasons.join(", ");
+
+  return [
+    `Important Vransko weather update: ${label} around ${time}.`,
+    `${reasons}; ${mostUrgent.temperature}°C, feels like ${mostUrgent.feelsLike}°C.`,
+  ].join("\n");
+}
+
+export async function getVranskoImportantWeatherUpdate(
+  now = new Date()
+): Promise<string | null> {
+  const params = new URLSearchParams({
+    latitude: String(VRANSKO_LATITUDE),
+    longitude: String(VRANSKO_LONGITUDE),
+    hourly:
+      "temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m",
+    forecast_days: "1",
+    timezone: WEATHER_TIMEZONE,
+  });
+
+  try {
+    const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+    if (!res.ok) return null;
+
+    const forecast = (await res.json()) as OpenMeteoForecastResponse;
+    const importantHours = findImportantWeatherHours(forecast, now);
+    return importantHours.length > 0
+      ? formatImportantWeatherUpdate(importantHours)
+      : null;
+  } catch (err) {
+    console.error(
+      "Important weather update error:",
       err instanceof Error ? err.message : "Unknown"
     );
     return null;
