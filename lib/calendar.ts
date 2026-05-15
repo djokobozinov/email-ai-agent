@@ -101,6 +101,11 @@ function getTomorrowDateKey(now: Date): string {
   return getLocalDateKey(tomorrow);
 }
 
+function getTargetDateKey(target: CalendarReportTarget, now: Date): string {
+  if (target === "today") return getLocalDateKey(now);
+  return getTomorrowDateKey(now);
+}
+
 function getEventLocalDateKey(event: GoogleCalendarEvent): string | null {
   if (event.start?.date) return event.start.date;
   if (event.start?.dateTime) return getLocalDateKey(new Date(event.start.dateTime));
@@ -188,7 +193,8 @@ export function shouldSendDailyCalendarReport(now = new Date()): boolean {
 
 export function formatCalendarReport(
   date: string,
-  items: CalendarAgendaItem[]
+  items: CalendarAgendaItem[],
+  label = "Tomorrow"
 ): string {
   const uniqueItems = dedupeAgendaItems(items);
   const events = uniqueItems
@@ -207,20 +213,23 @@ export function formatCalendarReport(
   ].filter(Boolean);
 
   if (sections.length === 0) {
-    return `Tomorrow (${date}): no calendar events, holidays, or birthdays found.`;
+    return `${label} (${date}): no calendar events, holidays, or birthdays found.`;
   }
 
-  return [`Tomorrow (${date})`, ...sections].join("\n\n");
+  return [`${label} (${date})`, ...sections].join("\n\n");
 }
 
-export async function getTomorrowCalendarReport(
+export type CalendarReportTarget = "today" | "tomorrow";
+
+export async function getCalendarReport(
+  target: CalendarReportTarget,
   now = new Date()
 ): Promise<string | null> {
   const accountIds = getConfiguredAccountIds();
   if (accountIds.length === 0) return null;
 
-  const tomorrowKey = getTomorrowDateKey(now);
-  const timeMin = now.toISOString();
+  const targetKey = getTargetDateKey(target, now);
+  const timeMin = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const timeMax = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString();
   const items: CalendarAgendaItem[] = [];
 
@@ -243,7 +252,7 @@ export async function getTomorrowCalendarReport(
         });
 
         for (const event of (res.data.items ?? []) as GoogleCalendarEvent[]) {
-          if (getEventLocalDateKey(event) !== tomorrowKey) continue;
+          if (getEventLocalDateKey(event) !== targetKey) continue;
           const item = toAgendaItem(event, calendarConfig.kind);
           if (item) items.push(item);
         }
@@ -256,5 +265,15 @@ export async function getTomorrowCalendarReport(
     }
   }
 
-  return formatCalendarReport(tomorrowKey, items);
+  return formatCalendarReport(
+    targetKey,
+    items,
+    target === "today" ? "Today" : "Tomorrow"
+  );
+}
+
+export async function getTomorrowCalendarReport(
+  now = new Date()
+): Promise<string | null> {
+  return getCalendarReport("tomorrow", now);
 }

@@ -18,6 +18,7 @@ vi.mock("googleapis", () => ({
 }));
 
 import {
+  getCalendarReport,
   formatCalendarReport,
   getTomorrowCalendarReport,
   shouldSendDailyCalendarReport,
@@ -111,5 +112,34 @@ describe("daily calendar report", () => {
     expect(report).toContain("Events\n- 09:00 Standup");
     expect(report).toContain("Holidays\n- Statehood Day");
     expect(report).toContain("Birthdays\n- Ana's birthday");
+  });
+
+  it("reads today's full agenda for on-demand requests", async () => {
+    calendarListMock
+      .mockResolvedValueOnce({
+        data: {
+          items: [
+            {
+              summary: "Morning planning",
+              start: { dateTime: "2026-01-13T08:30:00+01:00" },
+            },
+            {
+              summary: "Tomorrow item",
+              start: { dateTime: "2026-01-14T09:00:00+01:00" },
+            },
+          ],
+        },
+      })
+      .mockResolvedValueOnce({ data: { items: [] } })
+      .mockResolvedValueOnce({ data: { items: [] } });
+
+    const report = await getCalendarReport(
+      "today",
+      new Date("2026-01-13T19:00:00.000Z")
+    );
+
+    expect(report).toContain("Today (2026-01-13)");
+    expect(report).toContain("Events\n- 08:30 Morning planning");
+    expect(report).not.toContain("Tomorrow item");
   });
 });

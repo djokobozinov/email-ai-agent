@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { generateText } from "ai";
+import { getCalendarReport } from "./calendar";
 import { generateAssistantReply } from "./assistant";
 
 vi.mock("ai", () => ({
@@ -8,6 +9,10 @@ vi.mock("ai", () => ({
 
 vi.mock("@ai-sdk/openai", () => ({
   createOpenAI: () => (model: string) => model,
+}));
+
+vi.mock("./calendar", () => ({
+  getCalendarReport: vi.fn(),
 }));
 
 describe("generateAssistantReply", () => {
@@ -75,5 +80,34 @@ describe("generateAssistantReply", () => {
     const result = await generateAssistantReply("hello");
 
     expect(result).toBeNull();
+  });
+
+  it("returns today's calendar report without calling OpenAI", async () => {
+    delete process.env.OPENAI_API_KEY;
+    vi.mocked(getCalendarReport).mockResolvedValue("Today (2026-05-15)\n\nEvents");
+
+    const result = await generateAssistantReply("what events do I have today?");
+
+    expect(result).toBe("Today (2026-05-15)\n\nEvents");
+    expect(getCalendarReport).toHaveBeenCalledWith("today");
+    expect(generateText).not.toHaveBeenCalled();
+  });
+
+  it("recognizes a misspelled tomorrow calendar request", async () => {
+    vi.mocked(getCalendarReport).mockResolvedValue("Tomorrow (2026-05-16)");
+
+    const result = await generateAssistantReply("show my tomorow events");
+
+    expect(result).toBe("Tomorrow (2026-05-16)");
+    expect(getCalendarReport).toHaveBeenCalledWith("tomorrow");
+  });
+
+  it("returns setup guidance when calendar access is unavailable", async () => {
+    vi.mocked(getCalendarReport).mockResolvedValue(null);
+
+    const result = await generateAssistantReply("today calendar");
+
+    expect(result).toContain("Calendar access is not configured yet.");
+    expect(generateText).not.toHaveBeenCalled();
   });
 });
