@@ -65,10 +65,10 @@ describe("daily calendar report", () => {
       { title: "Ana's birthday", time: null, kind: "birthday" },
     ]);
 
-    expect(report).toContain("Tomorrow (2026-05-14)");
-    expect(report).toContain("Events\n- 09:00 Standup");
-    expect(report).toContain("Holidays\n- Statehood Day");
-    expect(report).toContain("Birthdays\n- Ana's birthday");
+    expect(report).toContain("📅 Tomorrow (2026-05-14)");
+    expect(report).toContain("📅 Events\n- 📅 09:00 Standup");
+    expect(report).toContain("🎉 Holidays\n- 🎉 Statehood Day");
+    expect(report).toContain("🎂 Birthdays\n- 🎂 Ana's birthday");
   });
 
   it("reads tomorrow items from primary, holiday, and birthday calendars", async () => {
@@ -109,9 +109,9 @@ describe("daily calendar report", () => {
       new Date("2026-01-13T19:00:00.000Z")
     );
 
-    expect(report).toContain("Events\n- 09:00 Standup");
-    expect(report).toContain("Holidays\n- Statehood Day");
-    expect(report).toContain("Birthdays\n- Ana's birthday");
+    expect(report).toContain("📅 Events\n- 📅 09:00 Standup");
+    expect(report).toContain("🎉 Holidays\n- 🎉 Statehood Day");
+    expect(report).toContain("🎂 Birthdays\n- 🎂 Ana's birthday");
   });
 
   it("reads today's full agenda for on-demand requests", async () => {
@@ -138,8 +138,8 @@ describe("daily calendar report", () => {
       new Date("2026-01-13T19:00:00.000Z")
     );
 
-    expect(report).toContain("Today (2026-01-13)");
-    expect(report).toContain("Events\n- 08:30 Morning planning");
+    expect(report).toContain("📅 Today (2026-01-13)");
+    expect(report).toContain("📅 Events\n- 📅 08:30 Morning planning");
     expect(report).not.toContain("Tomorrow item");
   });
 });

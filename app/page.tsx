@@ -520,13 +520,6 @@ export default function Home() {
                     <code className="text-[#bc8cff]">GOOGLE_REFRESH_TOKEN</code>{" "}
                     from env.
                   </p>
-                  <a
-                    href="/api/auth/gmail?action=init"
-                    className="inline-flex items-center gap-1 rounded border border-[#30363d] bg-[#21262d] px-3 py-2 text-white hover:border-[#58a6ff]"
-                  >
-                    <span className="text-[#3fb950]">$</span> Reconnect Google
-                    Calendar
-                  </a>
                 </div>
               )}
               {status && !status.configured && (

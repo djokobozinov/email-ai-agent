@@ -49,11 +49,12 @@ describe("daily weather report", () => {
       new Date("2026-01-13T19:00:00.000Z")
     );
 
-    expect(report).toContain("Vransko tomorrow: morning 7°C, partly cloudy");
-    expect(report).toContain("afternoon 14°C, rain");
-    expect(report).toContain("evening 10°C, partly cloudy");
-    expect(report).toContain("Wear: warm jackets and layers");
-    expect(report).toContain("Kids: warm jackets");
+    expect(report).toContain("🌧️ Vransko tomorrow");
+    expect(report).toContain("morning 7°C, ⛅ partly cloudy");
+    expect(report).toContain("afternoon 14°C, 🌧️ rain");
+    expect(report).toContain("evening 10°C, ⛅ partly cloudy");
+    expect(report).toContain("🧥 Wear: warm jackets and layers");
+    expect(report).toContain("🧒 Kids: warm jackets");
     expect(report).toContain("waterproof jackets or rain suits");
     expect(report).not.toMatch(/\d{4}-\d{2}-\d{2}/);
     expect(report).not.toMatch(/\d{2}:\d{2}/);
@@ -95,7 +96,7 @@ describe("daily weather report", () => {
       new Date("2026-01-13T10:00:00.000Z")
     );
 
-    expect(update).toContain("Heavy rain chance is coming in 1 hour.");
+    expect(update).toContain("🌧️ Heavy rain chance is coming in 1 hour.");
     expect(update).toContain("rain chance 85%");
     expect(update).not.toMatch(/\d{4}-\d{2}-\d{2}/);
     expect(update).not.toMatch(/\d{2}:\d{2}/);
@@ -123,7 +124,7 @@ describe("daily weather report", () => {
       new Date("2026-01-13T09:00:00.000Z")
     );
 
-    expect(update).toContain("Storm is coming in 1 hour.");
+    expect(update).toContain("⛈️ Storm is coming in 1 hour.");
     expect(update).not.toMatch(/\d{4}-\d{2}-\d{2}/);
     expect(update).not.toMatch(/\d{2}:\d{2}/);
   });

@@ -82,13 +82,23 @@ describe("generateAssistantReply", () => {
     expect(result).toBeNull();
   });
 
+  it("returns a clear billing message when OpenAI quota is exhausted", async () => {
+    process.env.OPENAI_API_KEY = "sk-test-key";
+    const err = new Error("insufficient_quota: exceeded current quota");
+    vi.mocked(generateText).mockRejectedValue(err);
+
+    const result = await generateAssistantReply("hello");
+
+    expect(result).toContain("OpenAI credits or quota appear to be exhausted");
+  });
+
   it("returns today's calendar report without calling OpenAI", async () => {
     delete process.env.OPENAI_API_KEY;
-    vi.mocked(getCalendarReport).mockResolvedValue("Today (2026-05-15)\n\nEvents");
+    vi.mocked(getCalendarReport).mockResolvedValue("📅 Today (2026-05-15)\n\n📅 Events");
 
     const result = await generateAssistantReply("what events do I have today?");
 
-    expect(result).toBe("Today (2026-05-15)\n\nEvents");
+    expect(result).toBe("📅 Today (2026-05-15)\n\n📅 Events");
     expect(getCalendarReport).toHaveBeenCalledWith("today");
     expect(generateText).not.toHaveBeenCalled();
   });
