@@ -312,7 +312,7 @@ function formatPeriodSummary(period: WeatherPeriodSummary): string {
 
 export function shouldSendDailyWeatherReport(now = new Date()): boolean {
   const { hour, minute } = getLocalTimeParts(now);
-  return hour === REPORT_HOUR && minute === REPORT_MINUTE;
+  return hour === REPORT_HOUR && minute >= REPORT_MINUTE;
 }
 
 export function shouldCheckHourlyWeatherUpdate(now = new Date()): boolean {

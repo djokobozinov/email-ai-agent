@@ -16,10 +16,22 @@ describe("daily weather report", () => {
       shouldSendDailyWeatherReport(new Date("2026-01-13T19:30:00.000Z"))
     ).toBe(true);
     expect(
+      shouldSendDailyWeatherReport(new Date("2026-01-13T19:31:00.000Z"))
+    ).toBe(true);
+    expect(
+      shouldSendDailyWeatherReport(new Date("2026-01-13T19:59:00.000Z"))
+    ).toBe(true);
+    expect(
       shouldSendDailyWeatherReport(new Date("2026-07-13T18:30:00.000Z"))
     ).toBe(true);
     expect(
+      shouldSendDailyWeatherReport(new Date("2026-01-13T19:29:00.000Z"))
+    ).toBe(false);
+    expect(
       shouldSendDailyWeatherReport(new Date("2026-01-13T19:00:00.000Z"))
+    ).toBe(false);
+    expect(
+      shouldSendDailyWeatherReport(new Date("2026-01-13T20:00:00.000Z"))
     ).toBe(false);
   });
 
