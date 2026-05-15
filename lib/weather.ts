@@ -2,6 +2,7 @@ const VRANSKO_LATITUDE = 46.2441;
 const VRANSKO_LONGITUDE = 14.9514;
 const WEATHER_TIMEZONE = "Europe/Ljubljana";
 const REPORT_HOUR = 20;
+const REPORT_MINUTE = 30;
 const IMPORTANT_LOOKAHEAD_HOURS = 6;
 const MORNING_START_HOUR = 6;
 const AFTERNOON_START_HOUR = 12;
@@ -311,7 +312,7 @@ function formatPeriodSummary(period: WeatherPeriodSummary): string {
 
 export function shouldSendDailyWeatherReport(now = new Date()): boolean {
   const { hour, minute } = getLocalTimeParts(now);
-  return hour === REPORT_HOUR && minute === 0;
+  return hour === REPORT_HOUR && minute === REPORT_MINUTE;
 }
 
 export function shouldCheckHourlyWeatherUpdate(now = new Date()): boolean {

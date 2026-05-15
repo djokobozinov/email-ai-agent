@@ -11,15 +11,15 @@ describe("daily weather report", () => {
     vi.unstubAllGlobals();
   });
 
-  it("is due at 20:00 Europe/Ljubljana", () => {
-    expect(
-      shouldSendDailyWeatherReport(new Date("2026-01-13T19:00:00.000Z"))
-    ).toBe(true);
-    expect(
-      shouldSendDailyWeatherReport(new Date("2026-07-13T18:00:00.000Z"))
-    ).toBe(true);
+  it("is due at 20:30 Europe/Ljubljana", () => {
     expect(
       shouldSendDailyWeatherReport(new Date("2026-01-13T19:30:00.000Z"))
+    ).toBe(true);
+    expect(
+      shouldSendDailyWeatherReport(new Date("2026-07-13T18:30:00.000Z"))
+    ).toBe(true);
+    expect(
+      shouldSendDailyWeatherReport(new Date("2026-01-13T19:00:00.000Z"))
     ).toBe(false);
   });
 
@@ -46,7 +46,7 @@ describe("daily weather report", () => {
     );
 
     const report = await getVranskoWeatherReport(
-      new Date("2026-01-13T19:00:00.000Z")
+      new Date("2026-01-13T19:30:00.000Z")
     );
 
     expect(report).toContain("🌧️ Vransko tomorrow");
