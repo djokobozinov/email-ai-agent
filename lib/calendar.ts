@@ -175,7 +175,13 @@ function dedupeAgendaItems(items: CalendarAgendaItem[]): CalendarAgendaItem[] {
 
 function formatAgendaLine(item: CalendarAgendaItem): string {
   const prefix = item.time ? `${item.time} ` : "";
-  return `- ${prefix}${item.title}`;
+  return `- ${getAgendaItemEmoji(item)} ${prefix}${item.title}`;
+}
+
+function getAgendaItemEmoji(item: CalendarAgendaItem): string {
+  if (item.kind === "holiday") return "🎉";
+  if (item.kind === "birthday") return "🎂";
+  return "📅";
 }
 
 function formatAgendaSection(
@@ -207,16 +213,16 @@ export function formatCalendarReport(
     .filter((item) => item.kind === "birthday")
     .sort(sortAgendaItems);
   const sections = [
-    formatAgendaSection("Events", events),
-    formatAgendaSection("Holidays", holidays),
-    formatAgendaSection("Birthdays", birthdays),
+    formatAgendaSection("📅 Events", events),
+    formatAgendaSection("🎉 Holidays", holidays),
+    formatAgendaSection("🎂 Birthdays", birthdays),
   ].filter(Boolean);
 
   if (sections.length === 0) {
-    return `${label} (${date}): no calendar events, holidays, or birthdays found.`;
+    return `📅 ${label} (${date}): no calendar events, holidays, or birthdays found.`;
   }
 
-  return [`${label} (${date})`, ...sections].join("\n\n");
+  return [`📅 ${label} (${date})`, ...sections].join("\n\n");
 }
 
 export type CalendarReportTarget = "today" | "tomorrow";

@@ -5,6 +5,8 @@ import { getOpenAIModel } from "./openai";
 
 const ASSISTANT_SYSTEM_PROMPT =
   "You are a helpful Telegram assistant. Give concise, accurate answers. Use plain text only.";
+const OPENAI_CREDITS_EXHAUSTED_MESSAGE =
+  "I could not use AI because the OpenAI credits or quota appear to be exhausted. Please add credits or update billing, then try again.";
 
 function detectCalendarReportTarget(
   userMessage: string
@@ -20,6 +22,31 @@ function detectCalendarReportTarget(
   if (/\btoday\b/.test(normalized)) return "today";
 
   return null;
+}
+
+function isOpenAICreditsExhaustedError(err: unknown): boolean {
+  const details = [
+    err instanceof Error ? err.message : "",
+    typeof err === "object" && err !== null && "code" in err
+      ? String(err.code)
+      : "",
+    typeof err === "object" && err !== null && "statusCode" in err
+      ? String(err.statusCode)
+      : "",
+    typeof err === "object" && err !== null && "status" in err
+      ? String(err.status)
+      : "",
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    details.includes("insufficient_quota") ||
+    details.includes("quota") ||
+    details.includes("billing") ||
+    details.includes("credits") ||
+    details.includes("429")
+  );
 }
 
 export async function generateAssistantReply(
@@ -53,6 +80,10 @@ export async function generateAssistantReply(
       "Assistant error:",
       err instanceof Error ? err.message : "Unknown"
     );
+    if (isOpenAICreditsExhaustedError(err)) {
+      return OPENAI_CREDITS_EXHAUSTED_MESSAGE;
+    }
+
     return null;
   }
 }

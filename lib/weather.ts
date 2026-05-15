@@ -99,6 +99,21 @@ function getWeatherLabel(code: number): string {
   return "mixed weather";
 }
 
+function getWeatherEmoji(code: number): string {
+  if (code === 0) return "☀️";
+  if ([1, 2, 3].includes(code)) return "⛅";
+  if ([45, 48].includes(code)) return "🌫️";
+  if ([51, 53, 55, 56, 57].includes(code)) return "🌦️";
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return "🌧️";
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return "❄️";
+  if ([95, 96, 99].includes(code)) return "⛈️";
+  return "🌡️";
+}
+
+function formatWeatherLabel(code: number): string {
+  return `${getWeatherEmoji(code)} ${getWeatherLabel(code)}`;
+}
+
 function getHourFromForecastTime(time: string): number | null {
   const hour = Number(time.slice(11, 13));
   return Number.isFinite(hour) ? hour : null;
@@ -287,7 +302,7 @@ function formatPeriodSummary(period: WeatherPeriodSummary): string {
       ? `${period.maxTemperature}°C`
       : `${period.minTemperature}-${period.maxTemperature}°C`;
 
-  return `${period.name} ${temperature}, ${getWeatherLabel(
+  return `${period.name} ${temperature}, ${formatWeatherLabel(
     period.weatherCode
   )}, rain ${period.maxPrecipitationProbability}%, wind ${
     period.maxWindSpeed
@@ -304,7 +319,7 @@ export function shouldCheckHourlyWeatherUpdate(now = new Date()): boolean {
 }
 
 export function formatWeatherReport(summary: DailyWeatherSummary): string {
-  const label = getWeatherLabel(summary.weatherCode);
+  const label = formatWeatherLabel(summary.weatherCode);
   const adultAdvice = buildAdultDressAdvice(summary);
   const kidsAdvice = buildKidsDressAdvice(summary);
   const periods =
@@ -313,9 +328,9 @@ export function formatWeatherReport(summary: DailyWeatherSummary): string {
       : `tomorrow ${summary.minTemperature}-${summary.maxTemperature}°C, ${label}, rain ${summary.maxPrecipitationProbability}%, wind ${summary.maxWindSpeed} km/h`;
 
   return [
-    `Vransko tomorrow: ${periods}. Overall ${summary.minTemperature}-${summary.maxTemperature}°C and ${label}.`,
-    `Wear: ${adultAdvice}.`,
-    `Kids: ${kidsAdvice}.`,
+    `${getWeatherEmoji(summary.weatherCode)} Vransko tomorrow: ${periods}. Overall ${summary.minTemperature}-${summary.maxTemperature}°C and ${label}.`,
+    `🧥 Wear: ${adultAdvice}.`,
+    `🧒 Kids: ${kidsAdvice}.`,
   ].join("\n");
 }
 
@@ -441,30 +456,30 @@ function formatImportantWeatherHeadline(
   hourOffset: number
 ): string {
   if ([95, 96, 99].includes(hour.weatherCode)) {
-    return `Storm is coming ${getRelativeForecastPhrase(hourOffset)}.`;
+    return `⛈️ Storm is coming ${getRelativeForecastPhrase(hourOffset)}.`;
   }
 
   if (hour.windSpeed >= 45) {
-    return `Strong wind is coming ${getRelativeForecastPhrase(hourOffset)}.`;
+    return `💨 Strong wind is coming ${getRelativeForecastPhrase(hourOffset)}.`;
   }
 
   if (hour.precipitationProbability >= 80) {
-    return `Heavy rain chance is coming ${getRelativeForecastPhrase(
+    return `🌧️ Heavy rain chance is coming ${getRelativeForecastPhrase(
       hourOffset
     )}.`;
   }
 
   if ([71, 73, 75, 77, 85, 86].includes(hour.weatherCode)) {
-    return `Snow is coming ${getRelativeForecastPhrase(hourOffset)}.`;
+    return `❄️ Snow is coming ${getRelativeForecastPhrase(hourOffset)}.`;
   }
 
   if (hour.feelsLike <= 0) {
-    return `Very cold weather is coming ${getRelativeForecastPhrase(
+    return `🥶 Very cold weather is coming ${getRelativeForecastPhrase(
       hourOffset
     )}.`;
   }
 
-  return `Important weather is coming ${getRelativeForecastPhrase(hourOffset)}.`;
+  return `${getWeatherEmoji(hour.weatherCode)} Important weather is coming ${getRelativeForecastPhrase(hourOffset)}.`;
 }
 
 function formatImportantWeatherUpdate(
