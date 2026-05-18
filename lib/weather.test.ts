@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  getDailyWeatherReportTarget,
   getVranskoImportantWeatherUpdate,
   getVranskoWeatherReport,
   shouldCheckHourlyWeatherUpdate,
@@ -11,10 +12,19 @@ describe("daily weather report", () => {
     vi.unstubAllGlobals();
   });
 
-  it("is due at 20:30 Europe/Ljubljana", () => {
+  it("is due at 07:30 for today and 20:30 for tomorrow in Europe/Ljubljana", () => {
+    expect(
+      shouldSendDailyWeatherReport(new Date("2026-01-13T06:30:00.000Z"))
+    ).toBe(true);
+    expect(
+      getDailyWeatherReportTarget(new Date("2026-01-13T06:30:00.000Z"))
+    ).toBe("today");
     expect(
       shouldSendDailyWeatherReport(new Date("2026-01-13T19:30:00.000Z"))
     ).toBe(true);
+    expect(
+      getDailyWeatherReportTarget(new Date("2026-01-13T19:30:00.000Z"))
+    ).toBe("tomorrow");
     expect(
       shouldSendDailyWeatherReport(new Date("2026-01-13T19:31:00.000Z"))
     ).toBe(true);
@@ -26,6 +36,9 @@ describe("daily weather report", () => {
     ).toBe(true);
     expect(
       shouldSendDailyWeatherReport(new Date("2026-01-13T19:29:00.000Z"))
+    ).toBe(false);
+    expect(
+      shouldSendDailyWeatherReport(new Date("2026-01-13T06:29:00.000Z"))
     ).toBe(false);
     expect(
       shouldSendDailyWeatherReport(new Date("2026-01-13T19:00:00.000Z"))
@@ -62,14 +75,49 @@ describe("daily weather report", () => {
     );
 
     expect(report).toContain("🌧️ Vransko tomorrow");
-    expect(report).toContain("morning 7°C, ⛅ partly cloudy");
-    expect(report).toContain("afternoon 14°C, 🌧️ rain");
-    expect(report).toContain("evening 10°C, ⛅ partly cloudy");
+    expect(report).toContain("7-14°C");
+    expect(report).toContain("feels like 5-12°C");
+    expect(report).toContain("🌧️ rain");
+    expect(report).toContain("rain up to 65%");
+    expect(report?.split("\n")[0]).not.toContain("morning");
+    expect(report?.split("\n")[0]).not.toContain("afternoon");
+    expect(report?.split("\n")[0]).not.toContain("evening");
     expect(report).toContain("🧥 Wear: warm jackets and layers");
     expect(report).toContain("🧒 Kids: warm jackets");
     expect(report).toContain("waterproof jackets or rain suits");
     expect(report).not.toMatch(/\d{4}-\d{2}-\d{2}/);
     expect(report).not.toMatch(/\d{2}:\d{2}/);
+    expect(report?.split("\n")).toHaveLength(3);
+  });
+
+  it("formats the same report style for today's requested weather", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          hourly: {
+            time: ["2026-01-13T07:00", "2026-01-13T15:00"],
+            temperature_2m: [11.2, 20.1],
+            apparent_temperature: [10.5, 20.6],
+            precipitation_probability: [10, 30],
+            weather_code: [2, 3],
+            wind_speed_10m: [6, 14],
+          },
+        }),
+      })
+    );
+
+    const report = await getVranskoWeatherReport(
+      new Date("2026-01-13T06:30:00.000Z"),
+      "today"
+    );
+
+    expect(report).toContain("⛅ Vransko today");
+    expect(report).toContain("11-20°C");
+    expect(report).toContain("🧥 Wear:");
+    expect(report).toContain("🧒 Kids:");
+    expect(report?.split("\n")[0]).not.toContain("morning");
     expect(report?.split("\n")).toHaveLength(3);
   });
 

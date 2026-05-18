@@ -2,6 +2,10 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { getCalendarReport, type CalendarReportTarget } from "./calendar";
 import { getOpenAIModel } from "./openai";
+import {
+  getVranskoWeatherReport,
+  type WeatherReportTarget,
+} from "./weather";
 
 const ASSISTANT_SYSTEM_PROMPT =
   "You are a helpful Telegram assistant. Give concise, accurate answers. Use plain text only.";
@@ -17,6 +21,22 @@ function detectCalendarReportTarget(
       normalized
     );
   if (!asksForCalendar) return null;
+
+  if (/\btom+or+ow\b|\btomorrow\b/.test(normalized)) return "tomorrow";
+  if (/\btoday\b/.test(normalized)) return "today";
+
+  return null;
+}
+
+function detectWeatherReportTarget(
+  userMessage: string
+): WeatherReportTarget | null {
+  const normalized = userMessage.toLowerCase();
+  const asksForWeather =
+    /\b(weather|forecast|rain|temperature|temp|cold|hot|sunny|cloudy)\b/.test(
+      normalized
+    );
+  if (!asksForWeather) return null;
 
   if (/\btom+or+ow\b|\btomorrow\b/.test(normalized)) return "tomorrow";
   if (/\btoday\b/.test(normalized)) return "today";
@@ -57,6 +77,14 @@ export async function generateAssistantReply(
     return (
       (await getCalendarReport(calendarTarget)) ??
       "Calendar access is not configured yet. Add Google Calendar credentials and a refresh token to enable this."
+    );
+  }
+
+  const weatherTarget = detectWeatherReportTarget(userMessage);
+  if (weatherTarget) {
+    return (
+      (await getVranskoWeatherReport(new Date(), weatherTarget)) ??
+      "Weather access is not available right now. Please try again later."
     );
   }
 

@@ -161,7 +161,7 @@ const features = [
   {
     title: "Daily Weather Report",
     description:
-      "Every evening at 20:30, sends a short Vransko forecast with practical clothing advice for you and the kids.",
+      "At 07:30 and 20:30, sends a short Vransko forecast with practical clothing advice for you and the kids.",
     slug: "weather",
   },
   {
@@ -210,7 +210,7 @@ const howItWorks = [
   {
     title: "Daily Weather Report",
     description:
-      "The cron route checks local Ljubljana time and, at 20:30, gets tomorrow's Vransko forecast from Open-Meteo.",
+      "The cron route checks local Ljubljana time and sends today's Vransko forecast at 07:30 and tomorrow's forecast at 20:30.",
     example:
       "Vransko tomorrow: 8-16°C, rain 50%, wind 18 km/h. Dress: warm layers; waterproof jackets for the kids.",
   },
@@ -224,7 +224,7 @@ const howItWorks = [
   {
     title: "Smart Scheduling",
     description:
-      "A cron job runs every 30 minutes (or on your schedule). It triggers enabled recurring work, including email checks and the evening weather report.",
+      "A cron job runs every 30 minutes (or on your schedule). It triggers enabled recurring work, including email checks and weather reports.",
     example:
       "At 9:00, 9:30, 10:00... the agent checks enabled modules and sends useful updates to Telegram.",
   },

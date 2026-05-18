@@ -1,12 +1,10 @@
 const VRANSKO_LATITUDE = 46.2441;
 const VRANSKO_LONGITUDE = 14.9514;
 const WEATHER_TIMEZONE = "Europe/Ljubljana";
-const REPORT_HOUR = 20;
+const MORNING_REPORT_HOUR = 7;
+const EVENING_REPORT_HOUR = 20;
 const REPORT_MINUTE = 30;
 const IMPORTANT_LOOKAHEAD_HOURS = 6;
-const MORNING_START_HOUR = 6;
-const AFTERNOON_START_HOUR = 12;
-const EVENING_START_HOUR = 18;
 
 interface OpenMeteoHourlyForecast {
   time: string[];
@@ -22,6 +20,7 @@ interface OpenMeteoForecastResponse {
 }
 
 interface DailyWeatherSummary {
+  target: WeatherReportTarget;
   date: string;
   minTemperature: number;
   maxTemperature: number;
@@ -30,8 +29,9 @@ interface DailyWeatherSummary {
   maxPrecipitationProbability: number;
   maxWindSpeed: number;
   weatherCode: number;
-  periods: WeatherPeriodSummary[];
 }
+
+export type WeatherReportTarget = "today" | "tomorrow";
 
 interface ImportantWeatherHour {
   time: string;
@@ -41,15 +41,6 @@ interface ImportantWeatherHour {
   weatherCode: number;
   windSpeed: number;
   reasons: string[];
-}
-
-interface WeatherPeriodSummary {
-  name: "morning" | "afternoon" | "evening";
-  minTemperature: number;
-  maxTemperature: number;
-  maxPrecipitationProbability: number;
-  maxWindSpeed: number;
-  weatherCode: number;
 }
 
 function getLocalDateKey(date: Date): string {
@@ -89,6 +80,10 @@ function getTomorrowDateKey(now: Date): string {
   return getLocalDateKey(tomorrow);
 }
 
+function getTargetDateKey(now: Date, target: WeatherReportTarget): string {
+  return target === "today" ? getLocalDateKey(now) : getTomorrowDateKey(now);
+}
+
 function getWeatherLabel(code: number): string {
   if (code === 0) return "clear";
   if ([1, 2, 3].includes(code)) return "partly cloudy";
@@ -115,27 +110,6 @@ function formatWeatherLabel(code: number): string {
   return `${getWeatherEmoji(code)} ${getWeatherLabel(code)}`;
 }
 
-function getHourFromForecastTime(time: string): number | null {
-  const hour = Number(time.slice(11, 13));
-  return Number.isFinite(hour) ? hour : null;
-}
-
-function getPeriodName(hour: number): WeatherPeriodSummary["name"] | null {
-  if (hour >= MORNING_START_HOUR && hour < AFTERNOON_START_HOUR) {
-    return "morning";
-  }
-
-  if (hour >= AFTERNOON_START_HOUR && hour < EVENING_START_HOUR) {
-    return "afternoon";
-  }
-
-  if (hour >= EVENING_START_HOUR) {
-    return "evening";
-  }
-
-  return null;
-}
-
 function getMostImportantWeatherCode(codes: number[]): number {
   const priority = [
     99, 96, 95, 86, 85, 82, 81, 80, 77, 75, 73, 71, 67, 66, 65, 63, 61, 57,
@@ -145,49 +119,10 @@ function getMostImportantWeatherCode(codes: number[]): number {
   return priority.find((code) => codes.includes(code)) ?? codes[0] ?? 0;
 }
 
-function summarizeWeatherPeriods(
-  hourly: OpenMeteoHourlyForecast,
-  indexes: number[]
-): WeatherPeriodSummary[] {
-  const periodNames: WeatherPeriodSummary["name"][] = [
-    "morning",
-    "afternoon",
-    "evening",
-  ];
-
-  return periodNames
-    .map((name) => {
-      const periodIndexes = indexes.filter((index) => {
-        const hour = getHourFromForecastTime(hourly.time[index]);
-        return hour !== null && getPeriodName(hour) === name;
-      });
-
-      if (periodIndexes.length === 0) return null;
-
-      const temperatures = periodIndexes.map(
-        (index) => hourly.temperature_2m[index]
-      );
-      const precipitation = periodIndexes.map(
-        (index) => hourly.precipitation_probability[index]
-      );
-      const wind = periodIndexes.map((index) => hourly.wind_speed_10m[index]);
-      const codes = periodIndexes.map((index) => hourly.weather_code[index]);
-
-      return {
-        name,
-        minTemperature: Math.round(Math.min(...temperatures)),
-        maxTemperature: Math.round(Math.max(...temperatures)),
-        maxPrecipitationProbability: Math.round(Math.max(...precipitation)),
-        maxWindSpeed: Math.round(Math.max(...wind)),
-        weatherCode: getMostImportantWeatherCode(codes),
-      };
-    })
-    .filter((period): period is WeatherPeriodSummary => period !== null);
-}
-
-function summarizeTomorrowWeather(
+function summarizeWeatherForTarget(
   forecast: OpenMeteoForecastResponse,
-  now: Date
+  now: Date,
+  target: WeatherReportTarget
 ): DailyWeatherSummary | null {
   const hourly = forecast.hourly;
   if (
@@ -201,9 +136,9 @@ function summarizeTomorrowWeather(
     return null;
   }
 
-  const tomorrowKey = getTomorrowDateKey(now);
+  const targetDateKey = getTargetDateKey(now, target);
   const indexes = hourly.time
-    .map((time, index) => (time.startsWith(tomorrowKey) ? index : -1))
+    .map((time, index) => (time.startsWith(targetDateKey) ? index : -1))
     .filter((index) => index >= 0);
 
   if (indexes.length === 0) return null;
@@ -217,7 +152,8 @@ function summarizeTomorrowWeather(
   const codes = indexes.map((index) => hourly.weather_code![index]);
 
   return {
-    date: tomorrowKey,
+    target,
+    date: targetDateKey,
     minTemperature: Math.round(Math.min(...temperatures)),
     maxTemperature: Math.round(Math.max(...temperatures)),
     minFeelsLike: Math.round(Math.min(...feelsLike)),
@@ -225,7 +161,6 @@ function summarizeTomorrowWeather(
     maxPrecipitationProbability: Math.round(Math.max(...precipitation)),
     maxWindSpeed: Math.round(Math.max(...wind)),
     weatherCode: getMostImportantWeatherCode(codes),
-    periods: summarizeWeatherPeriods(hourly as OpenMeteoHourlyForecast, indexes),
   };
 }
 
@@ -297,22 +232,18 @@ function buildKidsDressAdvice(summary: DailyWeatherSummary): string {
   return advice.join("; ");
 }
 
-function formatPeriodSummary(period: WeatherPeriodSummary): string {
-  const temperature =
-    period.minTemperature === period.maxTemperature
-      ? `${period.maxTemperature}°C`
-      : `${period.minTemperature}-${period.maxTemperature}°C`;
-
-  return `${period.name} ${temperature}, ${formatWeatherLabel(
-    period.weatherCode
-  )}, rain ${period.maxPrecipitationProbability}%, wind ${
-    period.maxWindSpeed
-  } km/h`;
+export function shouldSendDailyWeatherReport(now = new Date()): boolean {
+  return getDailyWeatherReportTarget(now) !== null;
 }
 
-export function shouldSendDailyWeatherReport(now = new Date()): boolean {
+export function getDailyWeatherReportTarget(
+  now = new Date()
+): WeatherReportTarget | null {
   const { hour, minute } = getLocalTimeParts(now);
-  return hour === REPORT_HOUR && minute >= REPORT_MINUTE;
+  if (minute < REPORT_MINUTE) return null;
+  if (hour === MORNING_REPORT_HOUR) return "today";
+  if (hour === EVENING_REPORT_HOUR) return "tomorrow";
+  return null;
 }
 
 export function shouldCheckHourlyWeatherUpdate(now = new Date()): boolean {
@@ -323,21 +254,31 @@ export function formatWeatherReport(summary: DailyWeatherSummary): string {
   const label = formatWeatherLabel(summary.weatherCode);
   const adultAdvice = buildAdultDressAdvice(summary);
   const kidsAdvice = buildKidsDressAdvice(summary);
-  const periods =
-    summary.periods.length > 0
-      ? summary.periods.map(formatPeriodSummary).join("; ")
-      : `tomorrow ${summary.minTemperature}-${summary.maxTemperature}°C, ${label}, rain ${summary.maxPrecipitationProbability}%, wind ${summary.maxWindSpeed} km/h`;
+  const dayLabel = summary.target === "today" ? "today" : "tomorrow";
+  const temperature =
+    summary.minTemperature === summary.maxTemperature
+      ? `${summary.maxTemperature}°C`
+      : `${summary.minTemperature}-${summary.maxTemperature}°C`;
+  const feelsLike =
+    summary.minFeelsLike === summary.maxFeelsLike
+      ? `${summary.maxFeelsLike}°C`
+      : `${summary.minFeelsLike}-${summary.maxFeelsLike}°C`;
 
   return [
-    `${getWeatherEmoji(summary.weatherCode)} Vransko tomorrow: ${periods}. Overall ${summary.minTemperature}-${summary.maxTemperature}°C and ${label}.`,
+    `${getWeatherEmoji(
+      summary.weatherCode
+    )} Vransko ${dayLabel}: ${temperature}, feels like ${feelsLike}, ${label}, rain up to ${
+      summary.maxPrecipitationProbability
+    }%, wind up to ${summary.maxWindSpeed} km/h.`,
     `🧥 Wear: ${adultAdvice}.`,
     `🧒 Kids: ${kidsAdvice}.`,
   ].join("\n");
 }
 
-export async function getVranskoWeatherReport(now = new Date()): Promise<
-  string | null
-> {
+export async function getVranskoWeatherReport(
+  now = new Date(),
+  target: WeatherReportTarget = "tomorrow"
+): Promise<string | null> {
   const params = new URLSearchParams({
     latitude: String(VRANSKO_LATITUDE),
     longitude: String(VRANSKO_LONGITUDE),
@@ -352,7 +293,7 @@ export async function getVranskoWeatherReport(now = new Date()): Promise<
     if (!res.ok) return null;
 
     const forecast = (await res.json()) as OpenMeteoForecastResponse;
-    const summary = summarizeTomorrowWeather(forecast, now);
+    const summary = summarizeWeatherForTarget(forecast, now, target);
     return summary ? formatWeatherReport(summary) : null;
   } catch (err) {
     console.error(

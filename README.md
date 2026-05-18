@@ -9,7 +9,7 @@ A self-hosted personal AI agent for small, useful automations across everyday to
 - **Reply-to-note capture**: reply to any Telegram message with `*` to save the replied message text into Notion.
 - **Gmail summaries**: connect up to 5 Gmail accounts with read-only OAuth and summarize unread messages with OpenAI.
 - **Telegram delivery**: receive Gmail summaries in Telegram, including category prefixes for social and promotions.
-- **Daily weather report**: get a 20:30 Europe/Ljubljana Vransko forecast with practical clothing advice for adults and kids.
+- **Daily weather report**: get 07:30 and 20:30 Europe/Ljubljana Vransko forecasts with practical clothing advice for adults and kids.
 - **Daily calendar report**: get a 20:00 Europe/Ljubljana Telegram message with tomorrow's Google Calendar events, holidays, and birthdays.
 - **Cron automation**: run scheduled work every 30 minutes through Vercel Cron or any external cron caller.
 - **Manual utilities**: password-protected pages for setting the Telegram webhook, testing Telegram delivery, and manually checking mail.
@@ -98,7 +98,7 @@ Copy `.env.example` to `.env` and set only what you need:
 | `TELEGRAM_WEBHOOK_SECRET` | Optional Telegram webhook header validation |
 | `MAX_EMAILS_PER_RUN`, `LABEL_FILTER`, `EXCLUDE_CATEGORIES` | Optional email-processing behavior |
 
-The daily weather report uses Open-Meteo and needs no weather API key. It sends tomorrow's Vransko forecast and short clothing advice for adults and kids at 20:30 Europe/Ljubljana.
+The daily weather report uses Open-Meteo and needs no weather API key. It sends today's Vransko forecast at 07:30, tomorrow's forecast at 20:30, and short clothing advice for adults and kids.
 
 The daily calendar report reads your primary Google Calendar plus optional extra calendars, the configured holiday calendar, and the configured birthday calendar. It sends tomorrow's events, holidays, and birthdays to Telegram at 20:00 Europe/Ljubljana.
 

@@ -16,6 +16,7 @@ import {
   shouldSendDailyCalendarReport,
 } from "@/lib/calendar";
 import {
+  getDailyWeatherReportTarget,
   getVranskoImportantWeatherUpdate,
   getVranskoWeatherReport,
   shouldCheckHourlyWeatherUpdate,
@@ -38,12 +39,14 @@ export async function GET(request: NextRequest) {
   const emailFeature = getEmailSummaryFeatureReadiness();
   const weatherFeature = getDailyWeatherReportFeatureReadiness();
   const calendarFeature = getDailyCalendarReportFeatureReadiness();
+  const now = new Date();
   let processed = 0;
   let weatherSent = false;
   let importantWeatherSent = false;
   let calendarSent = false;
-  const weatherDue = shouldSendDailyWeatherReport();
-  const importantWeatherDue = shouldCheckHourlyWeatherUpdate();
+  const weatherDue = shouldSendDailyWeatherReport(now);
+  const weatherTarget = getDailyWeatherReportTarget(now);
+  const importantWeatherDue = shouldCheckHourlyWeatherUpdate(now);
   const calendarDue = shouldSendDailyCalendarReport();
 
   if (emailFeature.enabled) {
@@ -82,7 +85,10 @@ export async function GET(request: NextRequest) {
   }
 
   if (weatherFeature.enabled && weatherDue) {
-    const report = await getVranskoWeatherReport();
+    const report = await getVranskoWeatherReport(
+      now,
+      weatherTarget ?? "tomorrow"
+    );
     weatherSent = report ? await sendRawMessage(report) : false;
   }
 
@@ -111,6 +117,7 @@ export async function GET(request: NextRequest) {
       ? {
           enabled: true,
           due: weatherDue,
+          target: weatherTarget,
           sent: weatherSent,
           importantUpdate: {
             due: importantWeatherDue,
@@ -120,6 +127,7 @@ export async function GET(request: NextRequest) {
       : {
           enabled: false,
           due: weatherDue,
+          target: weatherTarget,
           sent: false,
           importantUpdate: {
             due: importantWeatherDue,
