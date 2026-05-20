@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { generateText } from "ai";
-import { getCalendarReport } from "./calendar";
+import { createCalendarEvent, getCalendarReport } from "./calendar";
 import { getVranskoWeatherReport } from "./weather";
-import { generateAssistantReply } from "./assistant";
+import {
+  generateAssistantReply,
+  parseCreateCalendarEventRequest,
+} from "./assistant";
 
 vi.mock("ai", () => ({
   generateText: vi.fn(),
@@ -13,6 +16,7 @@ vi.mock("@ai-sdk/openai", () => ({
 }));
 
 vi.mock("./calendar", () => ({
+  createCalendarEvent: vi.fn(),
   getCalendarReport: vi.fn(),
 }));
 
@@ -123,6 +127,40 @@ describe("generateAssistantReply", () => {
     const result = await generateAssistantReply("today calendar");
 
     expect(result).toContain("Calendar access is not configured yet.");
+    expect(generateText).not.toHaveBeenCalled();
+  });
+
+  it("parses an add event request with title, date, and clock", () => {
+    const event = parseCreateCalendarEventRequest(
+      "add event Dentist on 2026-05-21 at 14:30"
+    );
+
+    expect(event).toEqual({
+      title: "Dentist",
+      date: "2026-05-21",
+      time: "14:30",
+    });
+  });
+
+  it("creates calendar events without calling OpenAI", async () => {
+    delete process.env.OPENAI_API_KEY;
+    vi.mocked(createCalendarEvent).mockResolvedValue({
+      ok: true,
+      message: 'Added "Dentist" to your calendar on 2026-05-21 at 14:30.',
+    });
+
+    const result = await generateAssistantReply(
+      "add event Dentist on 2026-05-21 at 14:30"
+    );
+
+    expect(result).toBe(
+      'Added "Dentist" to your calendar on 2026-05-21 at 14:30.'
+    );
+    expect(createCalendarEvent).toHaveBeenCalledWith({
+      title: "Dentist",
+      date: "2026-05-21",
+      time: "14:30",
+    });
     expect(generateText).not.toHaveBeenCalled();
   });
 

@@ -1,7 +1,15 @@
 import { google } from "googleapis";
+import {
+  DEFAULT_MAX_EMAILS_PER_RUN,
+  MAX_EMAILS_PER_RUN_LIMIT,
+  getConfiguredValue,
+  getEmailSummaryAllowedSenders,
+  getEmailSummaryIgnoredSenders,
+  getGoogleConfiguredAccountIds,
+  getGoogleRedirectUri,
+  getGoogleRefreshToken,
+} from "./config";
 import { buildGmailQuery, MIN_BODY_LENGTH } from "./filters";
-
-const MAX_ACCOUNTS = 5;
 
 type GmailMessagePart = {
   mimeType?: string | null;
@@ -43,24 +51,13 @@ function findTextPlainBody(part: GmailMessagePart): string {
   return "";
 }
 
-function getRefreshTokenVar(accountId: number): string {
-  return accountId === 1 ? "GOOGLE_REFRESH_TOKEN" : `GOOGLE_REFRESH_TOKEN_${accountId}`;
-}
-
-function getRefreshToken(accountId: number): string | undefined {
-  return process.env[getRefreshTokenVar(accountId)];
-}
-
 function getOAuth2Client(
   accountId: number
 ): InstanceType<typeof google.auth.OAuth2> | null {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const refreshToken = getRefreshToken(accountId);
-  const appUrl = process.env.APP_URL?.trim();
-  const redirectUri = appUrl
-    ? `${appUrl.replace(/\/+$/, "")}/api/auth/gmail`
-    : undefined;
+  const clientId = getConfiguredValue("GOOGLE_CLIENT_ID");
+  const clientSecret = getConfiguredValue("GOOGLE_CLIENT_SECRET");
+  const refreshToken = getGoogleRefreshToken(accountId);
+  const redirectUri = getGoogleRedirectUri();
 
   if (!clientId || !clientSecret || !refreshToken) {
     return null;
@@ -77,11 +74,7 @@ function getOAuth2Client(
 }
 
 export function getConfiguredAccountIds(): number[] {
-  const ids: number[] = [];
-  for (let i = 1; i <= MAX_ACCOUNTS; i++) {
-    if (getRefreshToken(i)) ids.push(i);
-  }
-  return ids;
+  return getGoogleConfiguredAccountIds();
 }
 
 export interface EmailMessage {
@@ -92,6 +85,22 @@ export interface EmailMessage {
   labelIds?: string[];
 }
 
+function getEmailAddress(value: string): string {
+  const angleMatch = value.match(/<([^>]+)>/);
+  return (angleMatch?.[1] ?? value).trim().toLowerCase();
+}
+
+function shouldSummarizeSender(from: string): boolean {
+  const sender = getEmailAddress(from);
+  const ignoredSenders = getEmailSummaryIgnoredSenders();
+  if (ignoredSenders.some((ignored) => sender === ignored)) return false;
+
+  const allowedSenders = getEmailSummaryAllowedSenders();
+  if (allowedSenders.length === 0) return true;
+
+  return allowedSenders.some((allowed) => sender === allowed);
+}
+
 export async function listUnreadMessageIds(
   accountId: number
 ): Promise<string[]> {
@@ -100,12 +109,15 @@ export async function listUnreadMessageIds(
 
   const gmail = google.gmail({ version: "v1", auth });
   const maxResults =
-    parseInt(process.env.MAX_EMAILS_PER_RUN ?? "5", 10) || 5;
+    parseInt(
+      getConfiguredValue("MAX_EMAILS_PER_RUN") ?? String(DEFAULT_MAX_EMAILS_PER_RUN),
+      10
+    ) || DEFAULT_MAX_EMAILS_PER_RUN;
 
   const res = await gmail.users.messages.list({
     userId: "me",
     q: buildGmailQuery(),
-    maxResults: Math.min(maxResults, 10),
+    maxResults: Math.min(maxResults, MAX_EMAILS_PER_RUN_LIMIT),
   });
 
   const ids = (res.data.messages ?? []).map((m) => m.id!);
@@ -137,6 +149,10 @@ export async function getMessage(
   const from = getHeader("From");
   const subject = getHeader("Subject");
 
+  if (!shouldSummarizeSender(from)) {
+    return null;
+  }
+
   const body = payload.body?.data
     ? decodeBodyData(payload.body.data)
     : findTextPlainBody(payload as GmailMessagePart);
@@ -152,8 +168,8 @@ export async function getMessage(
 
 export function isGmailConfigured(): boolean {
   return (
-    !!process.env.GOOGLE_CLIENT_ID &&
-    !!process.env.GOOGLE_CLIENT_SECRET &&
+    !!getConfiguredValue("GOOGLE_CLIENT_ID") &&
+    !!getConfiguredValue("GOOGLE_CLIENT_SECRET") &&
     getConfiguredAccountIds().length > 0
   );
 }

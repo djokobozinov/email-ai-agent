@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  TELEGRAM_WEBHOOK_SETUP_REQUIRED_ENV_VARS,
+  getConfiguredValue,
+} from "@/lib/config";
 import { setTelegramWebhook } from "@/lib/telegram";
 
-const REQUIRED_ENV_VARS = ["APP_URL", "TELEGRAM_BOT_TOKEN"] as const;
-
 function isPasswordValid(password?: string): boolean {
-  const testPassword = process.env.TEST_PASSWORD?.trim();
+  const testPassword = getConfiguredValue("TEST_PASSWORD");
   return !!testPassword && password === testPassword;
 }
 
 function getMissingConfigVars(): string[] {
-  return REQUIRED_ENV_VARS.filter((name) => !process.env[name]?.trim());
+  return TELEGRAM_WEBHOOK_SETUP_REQUIRED_ENV_VARS.filter(
+    (name) => !getConfiguredValue(name)
+  );
 }
 
 export async function POST(request: NextRequest) {

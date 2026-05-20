@@ -122,6 +122,16 @@ const ENV_VARS_REFERENCE: {
     feature: "Email summaries",
   },
   {
+    name: "EMAIL_SUMMARY_ALLOWED_SENDERS",
+    description: "Optional comma-separated sender allow-list",
+    feature: "Email summaries",
+  },
+  {
+    name: "EMAIL_SUMMARY_IGNORED_SENDERS",
+    description: "Optional comma-separated sender block-list",
+    feature: "Email summaries",
+  },
+  {
     name: "TELEGRAM_WEBHOOK_SECRET",
     description: "Optional header secret for webhook",
     feature: "Webhook",
@@ -167,7 +177,7 @@ const features = [
   {
     title: "Daily Calendar Report",
     description:
-      "Every evening at 20:00, sends tomorrow's calendar events, holidays, and birthdays to Telegram.",
+      "Every evening at 20:00, sends tomorrow's calendar events, holidays, and birthdays to Telegram. Add events from Telegram with title, date, and time.",
     slug: "calendar",
   },
   {
@@ -437,7 +447,7 @@ export default function Home() {
                   "skips spam",
                   "skips < 5 char emails",
                   "👥 social · 🏷️ promotions",
-                  "optional LABEL_FILTER, EXCLUDE_CATEGORIES",
+                  "optional LABEL_FILTER, EXCLUDE_CATEGORIES, sender lists",
                 ].map((item) => (
                   <li key={item} className="flex gap-2">
                     <span className="text-[#3fb950]">-</span>

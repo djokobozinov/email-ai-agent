@@ -1,12 +1,17 @@
 import { google } from "googleapis";
-
-const MAX_ACCOUNTS = 5;
-const CALENDAR_TIMEZONE = "Europe/Ljubljana";
-const REPORT_HOUR = 20;
-const DEFAULT_HOLIDAY_CALENDAR_ID =
-  "en.slovenian#holiday@group.v.calendar.google.com";
-const DEFAULT_BIRTHDAY_CALENDAR_ID =
-  "addressbook#contacts@group.v.calendar.google.com";
+import {
+  CALENDAR_TIMEZONE,
+  DAILY_CALENDAR_REPORT_HOUR,
+  DEFAULT_BIRTHDAY_CALENDAR_ID,
+  DEFAULT_EVENT_CALENDAR_ID,
+  DEFAULT_EVENT_DURATION_MINUTES,
+  DEFAULT_HOLIDAY_CALENDAR_ID,
+  getCommaSeparatedConfig,
+  getConfiguredValue,
+  getGoogleConfiguredAccountIds,
+  getGoogleRedirectUri,
+  getGoogleRefreshToken,
+} from "./config";
 
 type CalendarEventDate = {
   date?: string | null;
@@ -27,26 +32,27 @@ export interface CalendarAgendaItem {
   kind: "event" | "holiday" | "birthday";
 }
 
-function getRefreshTokenVar(accountId: number): string {
-  return accountId === 1
-    ? "GOOGLE_REFRESH_TOKEN"
-    : `GOOGLE_REFRESH_TOKEN_${accountId}`;
+export interface CreateCalendarEventInput {
+  title: string;
+  date: string;
+  time: string;
+  durationMinutes?: number;
 }
 
-function getRefreshToken(accountId: number): string | undefined {
-  return process.env[getRefreshTokenVar(accountId)];
+export interface CreateCalendarEventResult {
+  ok: boolean;
+  message: string;
+  htmlLink?: string;
+  error?: string;
 }
 
 function getOAuth2Client(
   accountId: number
 ): InstanceType<typeof google.auth.OAuth2> | null {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const refreshToken = getRefreshToken(accountId);
-  const appUrl = process.env.APP_URL?.trim();
-  const redirectUri = appUrl
-    ? `${appUrl.replace(/\/+$/, "")}/api/auth/gmail`
-    : undefined;
+  const clientId = getConfiguredValue("GOOGLE_CLIENT_ID");
+  const clientSecret = getConfiguredValue("GOOGLE_CLIENT_SECRET");
+  const refreshToken = getGoogleRefreshToken(accountId);
+  const redirectUri = getGoogleRedirectUri();
 
   if (!clientId || !clientSecret || !refreshToken) {
     return null;
@@ -60,14 +66,6 @@ function getOAuth2Client(
 
   oauth2Client.setCredentials({ refresh_token: refreshToken });
   return oauth2Client;
-}
-
-function getConfiguredAccountIds(): number[] {
-  const ids: number[] = [];
-  for (let i = 1; i <= MAX_ACCOUNTS; i++) {
-    if (getRefreshToken(i)) ids.push(i);
-  }
-  return ids;
 }
 
 function getLocalDateKey(date: Date): string {
@@ -124,16 +122,13 @@ function formatEventTime(event: GoogleCalendarEvent): string | null {
 }
 
 function getCalendarIds(): { id: string; kind: CalendarAgendaItem["kind"] }[] {
-  const configuredCalendarIds = (process.env.GOOGLE_CALENDAR_IDS ?? "")
-    .split(",")
-    .map((id) => id.trim())
-    .filter(Boolean)
+  const configuredCalendarIds = getCommaSeparatedConfig("GOOGLE_CALENDAR_IDS")
     .map((id) => ({ id, kind: "event" as const }));
   const holidayCalendarId =
-    process.env.GOOGLE_HOLIDAY_CALENDAR_ID?.trim() || DEFAULT_HOLIDAY_CALENDAR_ID;
+    getConfiguredValue("GOOGLE_HOLIDAY_CALENDAR_ID") ||
+    DEFAULT_HOLIDAY_CALENDAR_ID;
   const birthdayCalendarId =
-    process.env.GOOGLE_BIRTHDAY_CALENDAR_ID?.trim() ||
-    DEFAULT_BIRTHDAY_CALENDAR_ID;
+    getConfiguredValue("GOOGLE_BIRTHDAY_CALENDAR_ID") || DEFAULT_BIRTHDAY_CALENDAR_ID;
 
   return [
     { id: "primary", kind: "event" },
@@ -194,7 +189,7 @@ function formatAgendaSection(
 
 export function shouldSendDailyCalendarReport(now = new Date()): boolean {
   const { hour, minute } = getLocalTimeParts(now);
-  return hour === REPORT_HOUR && minute === 0;
+  return hour === DAILY_CALENDAR_REPORT_HOUR && minute === 0;
 }
 
 export function formatCalendarReport(
@@ -231,7 +226,7 @@ export async function getCalendarReport(
   target: CalendarReportTarget,
   now = new Date()
 ): Promise<string | null> {
-  const accountIds = getConfiguredAccountIds();
+  const accountIds = getGoogleConfiguredAccountIds();
   if (accountIds.length === 0) return null;
 
   const targetKey = getTargetDateKey(target, now);
@@ -282,4 +277,73 @@ export async function getTomorrowCalendarReport(
   now = new Date()
 ): Promise<string | null> {
   return getCalendarReport("tomorrow", now);
+}
+
+function addMinutesToLocalDateTime(
+  date: string,
+  time: string,
+  minutes: number
+): string {
+  const utcDate = new Date(`${date}T${time}:00Z`);
+  utcDate.setUTCMinutes(utcDate.getUTCMinutes() + minutes);
+  return `${utcDate.getUTCFullYear()}-${String(
+    utcDate.getUTCMonth() + 1
+  ).padStart(2, "0")}-${String(utcDate.getUTCDate()).padStart(
+    2,
+    "0"
+  )}T${String(utcDate.getUTCHours()).padStart(2, "0")}:${String(
+    utcDate.getUTCMinutes()
+  ).padStart(2, "0")}:00`;
+}
+
+export async function createCalendarEvent(
+  input: CreateCalendarEventInput,
+  accountId = 1
+): Promise<CreateCalendarEventResult | null> {
+  const auth = getOAuth2Client(accountId);
+  if (!auth) return null;
+
+  const durationMinutes =
+    input.durationMinutes && input.durationMinutes > 0
+      ? input.durationMinutes
+      : DEFAULT_EVENT_DURATION_MINUTES;
+  const startDateTime = `${input.date}T${input.time}:00`;
+  const endDateTime = addMinutesToLocalDateTime(
+    input.date,
+    input.time,
+    durationMinutes
+  );
+
+  try {
+    const calendar = google.calendar({ version: "v3", auth });
+    const res = await calendar.events.insert({
+      calendarId: DEFAULT_EVENT_CALENDAR_ID,
+      requestBody: {
+        summary: input.title,
+        start: {
+          dateTime: startDateTime,
+          timeZone: CALENDAR_TIMEZONE,
+        },
+        end: {
+          dateTime: endDateTime,
+          timeZone: CALENDAR_TIMEZONE,
+        },
+      },
+    });
+
+    const event = res.data as GoogleCalendarEvent & { htmlLink?: string | null };
+    return {
+      ok: true,
+      message: `Added "${input.title}" to your calendar on ${input.date} at ${input.time}.`,
+      htmlLink: event.htmlLink ?? undefined,
+    };
+  } catch (err) {
+    const error = err instanceof Error ? err.message : "Unknown";
+    console.error("Calendar create error:", error);
+    return {
+      ok: false,
+      message: `Could not add "${input.title}" to your calendar.`,
+      error,
+    };
+  }
 }

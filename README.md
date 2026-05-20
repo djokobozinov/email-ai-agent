@@ -11,10 +11,11 @@ A self-hosted personal AI agent for small, useful automations across everyday to
 - **Telegram delivery**: receive Gmail summaries in Telegram, including category prefixes for social and promotions.
 - **Daily weather report**: get 07:30 and 20:30 Europe/Ljubljana Vransko forecasts with practical clothing advice for adults and kids.
 - **Daily calendar report**: get a 20:00 Europe/Ljubljana Telegram message with tomorrow's Google Calendar events, holidays, and birthdays.
+- **Calendar event creation**: send Telegram messages like `add event Dentist on 2026-05-21 at 14:30` to create a Google Calendar event.
 - **Cron automation**: run scheduled work every 30 minutes through Vercel Cron or any external cron caller.
 - **Manual utilities**: password-protected pages for setting the Telegram webhook, testing Telegram delivery, and manually checking mail.
 - **Feature readiness checks**: setup/status UI shows which optional modules are enabled and which env vars are missing.
-- **Email filtering controls**: limit processed mail with `MAX_EMAILS_PER_RUN`, `LABEL_FILTER`, and `EXCLUDE_CATEGORIES`.
+- **Email filtering controls**: limit processed mail with `MAX_EMAILS_PER_RUN`, `LABEL_FILTER`, `EXCLUDE_CATEGORIES`, `EMAIL_SUMMARY_ALLOWED_SENDERS`, and `EMAIL_SUMMARY_IGNORED_SENDERS`.
 - **Webhook security**: optional Telegram webhook secret validation.
 - **No database**: configuration is env-var driven, keeping the deployment simple and portable.
 
@@ -96,11 +97,11 @@ Copy `.env.example` to `.env` and set only what you need:
 | `TEST_PASSWORD` | Password for `/telegram-webhook`, `/telegram-test`, `/check-mail` |
 | `CRON_SECRET` | Optional bearer auth for external cron callers |
 | `TELEGRAM_WEBHOOK_SECRET` | Optional Telegram webhook header validation |
-| `MAX_EMAILS_PER_RUN`, `LABEL_FILTER`, `EXCLUDE_CATEGORIES` | Optional email-processing behavior |
+| `MAX_EMAILS_PER_RUN`, `LABEL_FILTER`, `EXCLUDE_CATEGORIES`, `EMAIL_SUMMARY_ALLOWED_SENDERS`, `EMAIL_SUMMARY_IGNORED_SENDERS` | Optional email-processing behavior |
 
 The daily weather report uses Open-Meteo and needs no weather API key. It sends today's Vransko forecast at 07:30, tomorrow's forecast at 20:30, and short clothing advice for adults and kids.
 
-The daily calendar report reads your primary Google Calendar plus optional extra calendars, the configured holiday calendar, and the configured birthday calendar. It sends tomorrow's events, holidays, and birthdays to Telegram at 20:00 Europe/Ljubljana.
+The daily calendar report reads your primary Google Calendar plus optional extra calendars, the configured holiday calendar, and the configured birthday calendar. It sends tomorrow's events, holidays, and birthdays to Telegram at 20:00 Europe/Ljubljana. The Telegram assistant can create one-hour events on your primary calendar when your message includes an add/create/schedule intent plus a title, date, and time.
 
 ### Telegram Assistant Behavior
 
@@ -125,6 +126,7 @@ Use the same Google OAuth client for all accounts. Each account gets its own ref
 7. Restart the app
 
 Existing refresh tokens created before the calendar feature only have Gmail scope. Run setup again and replace the refresh token so Google grants Calendar read-only access too.
+Existing refresh tokens created before event creation also need setup again so Google grants Calendar event write access.
 
 ### 6. Disconnect Gmail (Optional)
 
@@ -162,6 +164,8 @@ If email summaries are not configured, `/api/cron/process` returns `processed: 0
 - Social emails show 👥 prefix; promotions show 🏷️ prefix
 - Optional: set `LABEL_FILTER=IMPORTANT` to process only important label
 - Optional: set `EXCLUDE_CATEGORIES=promotions` to skip promotions; use `promotions,social` for both
+- Optional: set `EMAIL_SUMMARY_ALLOWED_SENDERS=person@example.com,other@example.com` to summarize only those senders; leave empty to summarize all senders
+- Optional: set `EMAIL_SUMMARY_IGNORED_SENDERS=noise@example.com` to always skip those senders, even if they are also in the allow-list
 
 ## License
 

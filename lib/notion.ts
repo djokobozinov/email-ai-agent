@@ -1,7 +1,10 @@
-const NOTION_API_BASE_URL = "https://api.notion.com/v1";
-const NOTION_API_VERSION = "2022-06-28";
-const NOTION_TEXT_CHUNK_SIZE = 1900;
-const NOTION_CHILDREN_PAGE_SIZE = 100;
+import {
+  NOTION_API_BASE_URL,
+  NOTION_API_VERSION,
+  NOTION_CHILDREN_PAGE_SIZE,
+  NOTION_TEXT_CHUNK_SIZE,
+  getConfiguredValue,
+} from "./config";
 
 interface NotionApiErrorResponse {
   message?: string;
@@ -76,8 +79,7 @@ interface NotionFailureResult {
 }
 
 function getNotionApiKey(): string | null {
-  const apiKey = process.env.NOTION_API_KEY?.trim();
-  return apiKey || null;
+  return getConfiguredValue("NOTION_API_KEY");
 }
 
 function formatNotionId(id: string): string {
@@ -123,7 +125,7 @@ export function normalizeNotionPageId(input: string): string | null {
 }
 
 function getNotionNotesPageId(): string | null {
-  const raw = process.env.NOTION_NOTES_PAGE_ID?.trim();
+  const raw = getConfiguredValue("NOTION_NOTES_PAGE_ID");
   if (!raw) return null;
   return normalizeNotionPageId(raw);
 }

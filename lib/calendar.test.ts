@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const calendarListMock = vi.fn();
+const calendarInsertMock = vi.fn();
 
 vi.mock("googleapis", () => ({
   google: {
@@ -12,12 +13,14 @@ vi.mock("googleapis", () => ({
     calendar: vi.fn(() => ({
       events: {
         list: calendarListMock,
+        insert: calendarInsertMock,
       },
     })),
   },
 }));
 
 import {
+  createCalendarEvent,
   getCalendarReport,
   formatCalendarReport,
   getTomorrowCalendarReport,
@@ -40,6 +43,7 @@ describe("daily calendar report", () => {
     delete process.env.GOOGLE_HOLIDAY_CALENDAR_ID;
     delete process.env.GOOGLE_BIRTHDAY_CALENDAR_ID;
     calendarListMock.mockReset();
+    calendarInsertMock.mockReset();
   });
 
   afterEach(() => {
@@ -141,5 +145,39 @@ describe("daily calendar report", () => {
     expect(report).toContain("📅 Today (2026-01-13)");
     expect(report).toContain("📅 Events\n- 📅 08:30 Morning planning");
     expect(report).not.toContain("Tomorrow item");
+  });
+
+  it("creates calendar events on the primary calendar", async () => {
+    calendarInsertMock.mockResolvedValue({
+      data: {
+        htmlLink: "https://calendar.google.com/event?eid=abc",
+      },
+    });
+
+    const result = await createCalendarEvent({
+      title: "Dentist",
+      date: "2026-05-21",
+      time: "14:30",
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      message: 'Added "Dentist" to your calendar on 2026-05-21 at 14:30.',
+      htmlLink: "https://calendar.google.com/event?eid=abc",
+    });
+    expect(calendarInsertMock).toHaveBeenCalledWith({
+      calendarId: "primary",
+      requestBody: {
+        summary: "Dentist",
+        start: {
+          dateTime: "2026-05-21T14:30:00",
+          timeZone: "Europe/Ljubljana",
+        },
+        end: {
+          dateTime: "2026-05-21T15:30:00",
+          timeZone: "Europe/Ljubljana",
+        },
+      },
+    });
   });
 });

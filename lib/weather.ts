@@ -1,10 +1,13 @@
-const VRANSKO_LATITUDE = 46.2441;
-const VRANSKO_LONGITUDE = 14.9514;
-const WEATHER_TIMEZONE = "Europe/Ljubljana";
-const MORNING_REPORT_HOUR = 7;
-const EVENING_REPORT_HOUR = 20;
-const REPORT_MINUTE = 30;
-const IMPORTANT_LOOKAHEAD_HOURS = 6;
+import {
+  EVENING_WEATHER_REPORT_HOUR,
+  IMPORTANT_WEATHER_LOOKAHEAD_HOURS,
+  MORNING_WEATHER_REPORT_HOUR,
+  VRANSKO_LATITUDE,
+  VRANSKO_LONGITUDE,
+  WEATHER_LOCATION_NAME,
+  WEATHER_REPORT_MINUTE,
+  WEATHER_TIMEZONE,
+} from "./config";
 
 interface OpenMeteoHourlyForecast {
   time: string[];
@@ -240,9 +243,9 @@ export function getDailyWeatherReportTarget(
   now = new Date()
 ): WeatherReportTarget | null {
   const { hour, minute } = getLocalTimeParts(now);
-  if (minute < REPORT_MINUTE) return null;
-  if (hour === MORNING_REPORT_HOUR) return "today";
-  if (hour === EVENING_REPORT_HOUR) return "tomorrow";
+  if (minute < WEATHER_REPORT_MINUTE) return null;
+  if (hour === MORNING_WEATHER_REPORT_HOUR) return "today";
+  if (hour === EVENING_WEATHER_REPORT_HOUR) return "tomorrow";
   return null;
 }
 
@@ -267,7 +270,7 @@ export function formatWeatherReport(summary: DailyWeatherSummary): string {
   return [
     `${getWeatherEmoji(
       summary.weatherCode
-    )} Vransko ${dayLabel}: ${temperature}, feels like ${feelsLike}, ${label}, rain up to ${
+    )} ${WEATHER_LOCATION_NAME} ${dayLabel}: ${temperature}, feels like ${feelsLike}, ${label}, rain up to ${
       summary.maxPrecipitationProbability
     }%, wind up to ${summary.maxWindSpeed} km/h.`,
     `🧥 Wear: ${adultAdvice}.`,
@@ -367,7 +370,7 @@ function findImportantWeatherHours(
   const upcomingIndexes = hourly.time
     .map((time, index) => ({ time, index }))
     .filter(({ time }) => time >= currentHourKey)
-    .slice(0, IMPORTANT_LOOKAHEAD_HOURS);
+    .slice(0, IMPORTANT_WEATHER_LOOKAHEAD_HOURS);
 
   return upcomingIndexes
     .map(({ time, index }) => {

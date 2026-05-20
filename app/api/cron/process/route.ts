@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getConfiguredValue } from "@/lib/config";
 import {
   getConfiguredAccountIds,
   listUnreadMessageIds,
@@ -25,7 +26,7 @@ import {
 
 function isAuthorized(request: NextRequest): boolean {
   const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
+  const cronSecret = getConfiguredValue("CRON_SECRET");
   if (cronSecret && authHeader === `Bearer ${cronSecret}`) return true;
   if (request.headers.get("x-vercel-cron") === "1") return true;
   return false;

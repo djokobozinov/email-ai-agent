@@ -1,59 +1,18 @@
-const REFRESH_TOKEN_VARS = [
-  "GOOGLE_REFRESH_TOKEN",
-  "GOOGLE_REFRESH_TOKEN_2",
-  "GOOGLE_REFRESH_TOKEN_3",
-  "GOOGLE_REFRESH_TOKEN_4",
-  "GOOGLE_REFRESH_TOKEN_5",
-] as const;
-
-const EMAIL_SUMMARY_REFRESH_TOKEN_HINT =
-  "GOOGLE_REFRESH_TOKEN (or _2, _3, _4, _5)";
-
-const EMAIL_SUMMARY_REQUIRED_VARS = [
-  "GOOGLE_CLIENT_ID",
-  "GOOGLE_CLIENT_SECRET",
-  "OPENAI_API_KEY",
-  "TELEGRAM_BOT_TOKEN",
-  "TELEGRAM_CHAT_ID",
-] as const;
-
-const TELEGRAM_ASSISTANT_REQUIRED_VARS = [
-  "TELEGRAM_BOT_TOKEN",
-  "OPENAI_API_KEY",
-] as const;
-
-const NOTION_NOTES_REQUIRED_VARS = [
-  "TELEGRAM_BOT_TOKEN",
-  "NOTION_API_KEY",
-  "NOTION_NOTES_PAGE_ID",
-] as const;
-
-const TELEGRAM_TEST_REQUIRED_VARS = [
-  "TEST_PASSWORD",
-  "TELEGRAM_BOT_TOKEN",
-  "TELEGRAM_CHAT_ID",
-] as const;
-
-const TELEGRAM_WEBHOOK_SETUP_REQUIRED_VARS = [
-  "TEST_PASSWORD",
-  "APP_URL",
-  "TELEGRAM_BOT_TOKEN",
-] as const;
-
-const DAILY_WEATHER_REPORT_REQUIRED_VARS = [
-  "TELEGRAM_BOT_TOKEN",
-  "TELEGRAM_CHAT_ID",
-] as const;
-
-const DAILY_CALENDAR_REPORT_REQUIRED_VARS = [
-  "GOOGLE_CLIENT_ID",
-  "GOOGLE_CLIENT_SECRET",
-  "TELEGRAM_BOT_TOKEN",
-  "TELEGRAM_CHAT_ID",
-] as const;
+import {
+  DAILY_CALENDAR_REPORT_REQUIRED_VARS,
+  DAILY_WEATHER_REPORT_REQUIRED_VARS,
+  EMAIL_SUMMARY_REFRESH_TOKEN_HINT,
+  EMAIL_SUMMARY_REQUIRED_VARS,
+  GOOGLE_REFRESH_TOKEN_VARS,
+  NOTION_NOTES_REQUIRED_VARS,
+  TELEGRAM_ASSISTANT_REQUIRED_VARS,
+  TELEGRAM_TEST_REQUIRED_VARS,
+  TELEGRAM_WEBHOOK_SETUP_REQUIRED_VARS,
+  getConfiguredValue,
+} from "./config";
 
 function hasConfiguredValue(name: string): boolean {
-  return !!process.env[name]?.trim();
+  return !!getConfiguredValue(name);
 }
 
 function getMissingEnvVars(envVars: readonly string[]): string[] {
@@ -61,7 +20,7 @@ function getMissingEnvVars(envVars: readonly string[]): string[] {
 }
 
 function hasAtLeastOneRefreshToken(): boolean {
-  return REFRESH_TOKEN_VARS.some((name) => hasConfiguredValue(name));
+  return GOOGLE_REFRESH_TOKEN_VARS.some((name) => hasConfiguredValue(name));
 }
 
 function getFeatureReadiness(

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getConfiguredValue } from "@/lib/config";
 import { sendRawMessage } from "@/lib/telegram";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const { password, message } = body as { password?: string; message?: string };
 
-  const testPassword = process.env.TEST_PASSWORD;
+  const testPassword = getConfiguredValue("TEST_PASSWORD");
   if (!testPassword || password !== testPassword) {
     return NextResponse.json({ error: "Invalid password" }, { status: 401 });
   }

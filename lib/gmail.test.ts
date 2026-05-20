@@ -36,6 +36,8 @@ describe("getMessage", () => {
 
     getMock.mockReset();
     listMock.mockReset();
+    delete process.env.EMAIL_SUMMARY_ALLOWED_SENDERS;
+    delete process.env.EMAIL_SUMMARY_IGNORED_SENDERS;
   });
 
   afterEach(() => {
@@ -122,5 +124,70 @@ describe("getMessage", () => {
 
     expect(message?.body).toBe(emailBody);
     expect(message?.body).not.toContain("should be ignored");
+  });
+
+  it("skips senders outside the configured email summary allow-list", async () => {
+    process.env.EMAIL_SUMMARY_ALLOWED_SENDERS = "boss@example.com";
+    getMock.mockResolvedValue({
+      data: {
+        payload: {
+          headers: [
+            { name: "From", value: "Newsletter <news@example.com>" },
+            { name: "Subject", value: "Weekly update" },
+          ],
+          body: {
+            data: Buffer.from("Long enough body", "utf-8").toString("base64url"),
+          },
+        },
+        labelIds: ["UNREAD"],
+      },
+    });
+
+    await expect(getMessage("msg-3", 1)).resolves.toBeNull();
+  });
+
+  it("allows senders configured for email summaries", async () => {
+    process.env.EMAIL_SUMMARY_ALLOWED_SENDERS = "boss@example.com";
+    const body = "Please review this today.";
+    getMock.mockResolvedValue({
+      data: {
+        payload: {
+          headers: [
+            { name: "From", value: "Boss <boss@example.com>" },
+            { name: "Subject", value: "Review" },
+          ],
+          body: {
+            data: Buffer.from(body, "utf-8").toString("base64url"),
+          },
+        },
+        labelIds: ["UNREAD"],
+      },
+    });
+
+    const message = await getMessage("msg-4", 1);
+
+    expect(message?.from).toBe("Boss <boss@example.com>");
+    expect(message?.body).toBe(body);
+  });
+
+  it("skips ignored senders even when they are also allowed", async () => {
+    process.env.EMAIL_SUMMARY_ALLOWED_SENDERS = "boss@example.com";
+    process.env.EMAIL_SUMMARY_IGNORED_SENDERS = "boss@example.com";
+    getMock.mockResolvedValue({
+      data: {
+        payload: {
+          headers: [
+            { name: "From", value: "Boss <boss@example.com>" },
+            { name: "Subject", value: "Ignore this" },
+          ],
+          body: {
+            data: Buffer.from("Long enough body", "utf-8").toString("base64url"),
+          },
+        },
+        labelIds: ["UNREAD"],
+      },
+    });
+
+    await expect(getMessage("msg-5", 1)).resolves.toBeNull();
   });
 });

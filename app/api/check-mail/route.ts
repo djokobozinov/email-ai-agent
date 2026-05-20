@@ -7,12 +7,13 @@ import {
 import { getEmailSummaryFeatureReadiness } from "@/lib/features";
 import { summarizeEmail } from "@/lib/summarizer";
 import { sendToTelegram } from "@/lib/telegram";
+import { getConfiguredValue } from "@/lib/config";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const { password } = body as { password?: string };
 
-  const testPassword = process.env.TEST_PASSWORD;
+  const testPassword = getConfiguredValue("TEST_PASSWORD");
   if (!testPassword || password !== testPassword) {
     return NextResponse.json({ error: "Invalid password" }, { status: 401 });
   }

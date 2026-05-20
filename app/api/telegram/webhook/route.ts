@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateAssistantReply } from "@/lib/assistant";
 import { sendMessageToTelegramChat } from "@/lib/telegram";
 import { extractTelegramNote, saveNoteToNotion } from "@/lib/notion";
+import { getConfiguredValue } from "@/lib/config";
 
 interface TelegramMessage {
   text?: string;
@@ -37,7 +38,7 @@ function getMessageFromUpdate(update: TelegramUpdate): TelegramMessage | null {
 }
 
 function isWebhookAuthorized(request: NextRequest): boolean {
-  const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET?.trim();
+  const webhookSecret = getConfiguredValue("TELEGRAM_WEBHOOK_SECRET");
   if (!webhookSecret) return true;
   return (
     request.headers.get("x-telegram-bot-api-secret-token") === webhookSecret

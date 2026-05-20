@@ -1,5 +1,9 @@
-/** Number of minutes to look back for emails (matches cron interval) */
-const LOOKBACK_MINUTES = 30;
+import {
+  EMAIL_LOOKBACK_MINUTES,
+  MIN_EMAIL_BODY_LENGTH,
+  getCommaSeparatedConfig,
+  getConfiguredValue,
+} from "./config";
 
 /**
  * Builds Gmail query for filtering unread emails.
@@ -12,23 +16,21 @@ const LOOKBACK_MINUTES = 30;
  */
 export function buildGmailQuery(): string {
   const sinceEpoch = Math.floor(
-    (Date.now() - LOOKBACK_MINUTES * 60 * 1000) / 1000
+    (Date.now() - EMAIL_LOOKBACK_MINUTES * 60 * 1000) / 1000
   );
   const base = `is:unread -in:spam after:${sinceEpoch}`;
   let query = base;
 
-  const excludeCategories = process.env.EXCLUDE_CATEGORIES?.trim();
-  if (excludeCategories) {
-    const categories = excludeCategories
-      .split(",")
-      .map((c) => c.trim().toLowerCase())
-      .filter(Boolean);
+  const categories = getCommaSeparatedConfig("EXCLUDE_CATEGORIES").map((c) =>
+    c.toLowerCase()
+  );
+  if (categories.length > 0) {
     for (const cat of categories) {
       query += ` -category:${cat}`;
     }
   }
 
-  const labelFilter = process.env.LABEL_FILTER;
+  const labelFilter = getConfiguredValue("LABEL_FILTER");
   if (labelFilter) {
     query += ` label:${labelFilter}`;
   }
@@ -36,4 +38,4 @@ export function buildGmailQuery(): string {
 }
 
 /** Skip emails with very short bodies */
-export const MIN_BODY_LENGTH = 5;
+export const MIN_BODY_LENGTH = MIN_EMAIL_BODY_LENGTH;

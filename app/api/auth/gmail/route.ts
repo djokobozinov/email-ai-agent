@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
-
-const SCOPES = [
-  "https://www.googleapis.com/auth/gmail.readonly",
-  "https://www.googleapis.com/auth/calendar.readonly",
-];
-const MAX_ACCOUNTS = 5;
-
-function getRefreshTokenVar(accountId: number): string {
-  return accountId === 1 ? "GOOGLE_REFRESH_TOKEN" : `GOOGLE_REFRESH_TOKEN_${accountId}`;
-}
+import {
+  GOOGLE_OAUTH_SCOPES,
+  MAX_GOOGLE_ACCOUNTS,
+  getConfiguredValue,
+  getGoogleRefreshTokenVar,
+} from "@/lib/config";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -17,9 +13,9 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const state = searchParams.get("state"); // account id from init
 
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const appUrl = process.env.APP_URL;
+  const clientId = getConfiguredValue("GOOGLE_CLIENT_ID");
+  const clientSecret = getConfiguredValue("GOOGLE_CLIENT_SECRET");
+  const appUrl = getConfiguredValue("APP_URL");
 
   if (!clientId || !clientSecret || !appUrl) {
     return NextResponse.json(
@@ -38,11 +34,11 @@ export async function GET(request: NextRequest) {
   if (action === "init") {
     const accountId = Math.min(
       Math.max(1, parseInt(searchParams.get("account") ?? "1", 10) || 1),
-      MAX_ACCOUNTS
+      MAX_GOOGLE_ACCOUNTS
     );
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: "offline",
-      scope: SCOPES,
+      scope: [...GOOGLE_OAUTH_SCOPES],
       prompt: "consent",
       state: String(accountId),
     });
@@ -50,8 +46,8 @@ export async function GET(request: NextRequest) {
   }
 
   if (code) {
-    const accountId = state ? Math.min(Math.max(1, parseInt(state, 10) || 1), MAX_ACCOUNTS) : 1;
-    const envVar = getRefreshTokenVar(accountId);
+    const accountId = state ? Math.min(Math.max(1, parseInt(state, 10) || 1), MAX_GOOGLE_ACCOUNTS) : 1;
+    const envVar = getGoogleRefreshTokenVar(accountId);
 
     try {
       const { tokens } = await oauth2Client.getToken(code);
@@ -74,7 +70,7 @@ export async function GET(request: NextRequest) {
           <pre style="background:#f0f0f0;padding:1em;overflow-x:auto;">${envVar}=${refreshToken}</pre>
           <p>Then restart the application.</p>
           <p><a href="${appUrl}">← Back to app</a></p>
-          ${accountId < MAX_ACCOUNTS ? `<p><a href="${appUrl}/api/auth/gmail?action=init&account=${accountId + 1}">Add account ${accountId + 1}</a></p>` : ""}
+          ${accountId < MAX_GOOGLE_ACCOUNTS ? `<p><a href="${appUrl}/api/auth/gmail?action=init&account=${accountId + 1}">Add account ${accountId + 1}</a></p>` : ""}
         </body></html>`,
         { headers: { "Content-Type": "text/html" } }
       );

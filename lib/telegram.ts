@@ -1,22 +1,21 @@
 import type { Summary } from "./summarizer";
 import type { EmailMessage } from "./gmail";
-
-const CATEGORY_SOCIAL = "CATEGORY_SOCIAL";
-const CATEGORY_PROMOTIONS = "CATEGORY_PROMOTIONS";
+import {
+  CATEGORY_PROMOTIONS,
+  CATEGORY_SOCIAL,
+  getConfiguredValue,
+} from "./config";
 
 function getTelegramToken(): string | null {
-  const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
-  return token || null;
+  return getConfiguredValue("TELEGRAM_BOT_TOKEN");
 }
 
 function getConfiguredChatId(): string | null {
-  const chatId = process.env.TELEGRAM_CHAT_ID?.trim();
-  return chatId || null;
+  return getConfiguredValue("TELEGRAM_CHAT_ID");
 }
 
 function getAppUrl(): string | null {
-  const appUrl = process.env.APP_URL?.trim();
-  return appUrl || null;
+  return getConfiguredValue("APP_URL");
 }
 
 function getWebhookUrl(): string | null {
@@ -105,7 +104,7 @@ export async function sendRawMessage(text: string): Promise<boolean> {
 export async function setTelegramWebhook(): Promise<TelegramWebhookSetupResult> {
   const token = getTelegramToken();
   const webhookUrl = getWebhookUrl();
-  const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET?.trim() || null;
+  const webhookSecret = getConfiguredValue("TELEGRAM_WEBHOOK_SECRET");
   const secretEnabled = !!webhookSecret;
 
   if (!token || !webhookUrl) {
