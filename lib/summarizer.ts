@@ -13,9 +13,22 @@ const summarySchema = z.object({
   bullets: z.array(z.string()),
   isReceipt: z.boolean(),
   isImportant: z.boolean(),
+  receipt: z
+    .object({
+      vendor: z.string().nullable(),
+      amount: z.number().nullable(),
+      currency: z.string().nullable(),
+      date: z.string().nullable(),
+      dueDate: z.string().nullable(),
+      reference: z.string().nullable(),
+      description: z.string().nullable(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type Summary = z.infer<typeof summarySchema>;
+export type ReceiptDetails = NonNullable<Summary["receipt"]>;
 
 export async function summarizeEmail(email: EmailMessage): Promise<Summary | null> {
   const apiKey = getConfiguredValue("OPENAI_API_KEY");
@@ -42,11 +55,13 @@ export async function summarizeEmail(email: EmailMessage): Promise<Summary | nul
       return null;
     }
 
+    const receipt = output.isReceipt === true ? output.receipt ?? undefined : undefined;
     return {
       title: output.title ?? "No title",
       bullets: Array.isArray(output.bullets) ? output.bullets : [],
       isReceipt: output.isReceipt === true,
       isImportant: output.isImportant === true,
+      ...(receipt ? { receipt } : {}),
     };
   } catch (err) {
     console.error("Summarizer error:", err instanceof Error ? err.message : err);

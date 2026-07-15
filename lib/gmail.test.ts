@@ -21,7 +21,15 @@ vi.mock("googleapis", () => ({
   },
 }));
 
-import { getMessage } from "./gmail";
+import { getGmailMessageUrl, getMessage } from "./gmail";
+
+describe("getGmailMessageUrl", () => {
+  it("builds a direct Gmail link for the configured account", () => {
+    expect(getGmailMessageUrl("msg-123", 2)).toBe(
+      "https://mail.google.com/mail/u/1/#all/msg-123"
+    );
+  });
+});
 
 describe("getMessage", () => {
   const originalEnv = process.env;

@@ -23,6 +23,7 @@ interface AccountStatus {
     emailSummaries: FeatureReadiness;
     telegramAssistant: FeatureReadiness;
     notionNotes: FeatureReadiness;
+    receiptCapture: FeatureReadiness;
     telegramTest: FeatureReadiness;
     telegramWebhookSetup: FeatureReadiness;
     dailyWeatherReport: FeatureReadiness;
@@ -504,6 +505,7 @@ export default function Home() {
                         ["emailSummaries", "email"],
                         ["telegramAssistant", "assistant"],
                         ["notionNotes", "notion"],
+                        ["receiptCapture", "receipts"],
                         ["telegramTest", "telegram-test"],
                         ["telegramWebhookSetup", "webhook"],
                         ["dailyWeatherReport", "weather"],
@@ -544,6 +546,7 @@ export default function Home() {
                           ...(status.features.emailSummaries?.missing ?? []),
                           ...(status.features.telegramAssistant?.missing ?? []),
                           ...(status.features.notionNotes?.missing ?? []),
+                          ...(status.features.receiptCapture?.missing ?? []),
                           ...(status.features.telegramTest?.missing ?? []),
                           ...(status.features.telegramWebhookSetup?.missing ??
                             []),

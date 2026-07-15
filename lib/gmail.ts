@@ -85,6 +85,11 @@ export interface EmailMessage {
   labelIds?: string[];
 }
 
+export function getGmailMessageUrl(id: string, accountId: number): string {
+  const accountIndex = Math.max(0, accountId - 1);
+  return `https://mail.google.com/mail/u/${accountIndex}/#all/${encodeURIComponent(id)}`;
+}
+
 function getEmailAddress(value: string): string {
   const angleMatch = value.match(/<([^>]+)>/);
   return (angleMatch?.[1] ?? value).trim().toLowerCase();

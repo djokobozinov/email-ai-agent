@@ -8,6 +8,7 @@ A self-hosted personal AI agent for small, useful automations across everyday to
 - **Notion note capture**: save `*`-prefixed Telegram messages to a Notion notes page, including automatic subpages with `*<name>, <note>`.
 - **Reply-to-note capture**: reply to any Telegram message with `*` to save the replied message text into Notion.
 - **Gmail summaries**: connect up to 5 Gmail accounts with read-only OAuth and summarize unread messages with OpenAI.
+- **Receipt capture**: detect receipts/invoices in Gmail and save structured details plus a direct email link to the `Invoices` Notion subpage.
 - **Telegram delivery**: receive Gmail summaries in Telegram, including category prefixes for social and promotions.
 - **Daily weather report**: get 07:30 and 20:30 Europe/Ljubljana Vransko forecasts with practical clothing advice for adults and kids.
 - **Daily calendar report**: get a 20:00 Europe/Ljubljana Telegram message with tomorrow's Google Calendar events, holidays, and birthdays.
@@ -29,6 +30,8 @@ There are **no globally required env vars**. Each feature enables itself only wh
   `TELEGRAM_BOT_TOKEN`, `NOTION_API_KEY`, `NOTION_NOTES_PAGE_ID`
 - **Email summaries (Gmail → OpenAI → Telegram chat)** require:
   `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, at least one of `GOOGLE_REFRESH_TOKEN`..`GOOGLE_REFRESH_TOKEN_5`, `OPENAI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
+- **Receipt capture (Gmail → Notion Invoices)** requires:
+  `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, at least one Google refresh token, `OPENAI_API_KEY`, `NOTION_API_KEY`, `NOTION_NOTES_PAGE_ID`
 - **Daily Vransko weather report** requires:
   `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
 - **Daily calendar report** requires:
@@ -127,6 +130,10 @@ Use the same Google OAuth client for all accounts. Each account gets its own ref
 
 Existing refresh tokens created before the calendar feature only have Gmail scope. Run setup again and replace the refresh token so Google grants Calendar read-only access too.
 Existing refresh tokens created before event creation also need setup again so Google grants Calendar event write access.
+
+### Receipt Capture Setup
+
+Receipt capture uses the existing Notion notes integration. When a receipt is detected, the agent appends its extracted details and Gmail link to an `Invoices` child page under `NOTION_NOTES_PAGE_ID`. If that child page does not exist yet, the existing Notion implementation creates it automatically.
 
 ### 6. Disconnect Gmail (Optional)
 

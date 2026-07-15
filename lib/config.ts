@@ -48,6 +48,14 @@ export const NOTION_NOTES_REQUIRED_VARS = [
   "NOTION_NOTES_PAGE_ID",
 ] as const;
 
+export const RECEIPT_CAPTURE_REQUIRED_VARS = [
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+  "OPENAI_API_KEY",
+  "NOTION_API_KEY",
+  "NOTION_NOTES_PAGE_ID",
+] as const;
+
 export const TELEGRAM_TEST_REQUIRED_VARS = [
   "TEST_PASSWORD",
   "TELEGRAM_BOT_TOKEN",
@@ -93,11 +101,12 @@ For REGULAR emails, use:
 {"title": "Short title", "bullets": ["Bullet 1", "Bullet 2", "Bullet 3"], "isReceipt": false, "isImportant": true/false}
 
 For RECEIPTS or INVOICES (payment confirmation, purchase receipt, subscription bill, etc.), use:
-{"title": "🧾 [Summary: vendor, amount, due date if any. Important – need to pay/action.]", "bullets": [], "isReceipt": true, "isImportant": true/false}
+{"title": "🧾 [Summary: vendor, amount, due date if any. Important – need to pay/action.]", "bullets": [], "isReceipt": true, "isImportant": true/false, "receipt": {"vendor": "Vendor or null", "amount": 12.34, "currency": "EUR or null", "date": "YYYY-MM-DD or null", "dueDate": "YYYY-MM-DD or null", "reference": "Invoice/order/reference number or null", "description": "Short description or null"}}
 
 Rules:
 - Regular: 1 title, 2-3 bullets maximum. Preserve key facts: who, what, when, numbers. No advice, opinions, or suggestions.
 - Receipts/invoices: No bullets. Put a concise summary in title. Include 🧾 emoji. Add "Important – need to pay" (or similar) if action is needed. Preserve: vendor, amount, due date, reference numbers.
+- For regular emails set receipt to null. For receipts/invoices, fill every receipt field you can verify and use null for missing values. Never guess values.
 - isImportant: Set to true when the email likely needs the recipient's attention. Consider important: personal/work messages from known people, action required (reply, deadline, meeting), time-sensitive requests, financial/legal matters. Consider NOT important: newsletters, marketing, automated notifications, low-priority updates, spam.
 - If email is empty, promotional, or has no meaningful content, return:
   {"title": "No meaningful content to summarize", "bullets": [], "isReceipt": false, "isImportant": false}`;

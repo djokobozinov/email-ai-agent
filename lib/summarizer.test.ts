@@ -120,6 +120,39 @@ describe("summarizeEmail", () => {
     });
   });
 
+  it("returns structured receipt details when present", async () => {
+    process.env.OPENAI_API_KEY = "sk-test-key";
+    vi.mocked(generateText).mockResolvedValue({
+      output: {
+        title: "🧾 Acme EUR 42.50",
+        bullets: [],
+        isReceipt: true,
+        isImportant: false,
+        receipt: {
+          vendor: "Acme",
+          amount: 42.5,
+          currency: "EUR",
+          date: "2026-07-15",
+          dueDate: null,
+          reference: "INV-42",
+          description: "Office supplies",
+        },
+      },
+    } as never);
+
+    const result = await summarizeEmail(sampleEmail);
+
+    expect(result?.receipt).toEqual({
+      vendor: "Acme",
+      amount: 42.5,
+      currency: "EUR",
+      date: "2026-07-15",
+      dueDate: null,
+      reference: "INV-42",
+      description: "Office supplies",
+    });
+  });
+
   it("returns isImportant when email needs attention", async () => {
     process.env.OPENAI_API_KEY = "sk-test-key";
     vi.mocked(generateText).mockResolvedValue({

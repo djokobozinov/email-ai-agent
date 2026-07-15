@@ -5,6 +5,7 @@ import {
   EMAIL_SUMMARY_REQUIRED_VARS,
   GOOGLE_REFRESH_TOKEN_VARS,
   NOTION_NOTES_REQUIRED_VARS,
+  RECEIPT_CAPTURE_REQUIRED_VARS,
   TELEGRAM_ASSISTANT_REQUIRED_VARS,
   TELEGRAM_TEST_REQUIRED_VARS,
   TELEGRAM_WEBHOOK_SETUP_REQUIRED_VARS,
@@ -43,6 +44,7 @@ export interface OptionalFeaturesStatus {
   emailSummaries: FeatureReadiness;
   telegramAssistant: FeatureReadiness;
   notionNotes: FeatureReadiness;
+  receiptCapture: FeatureReadiness;
   telegramTest: FeatureReadiness;
   telegramWebhookSetup: FeatureReadiness;
   dailyWeatherReport: FeatureReadiness;
@@ -63,6 +65,14 @@ export function getTelegramAssistantFeatureReadiness(): FeatureReadiness {
 
 export function getNotionNotesFeatureReadiness(): FeatureReadiness {
   return getFeatureReadiness(NOTION_NOTES_REQUIRED_VARS);
+}
+
+export function getReceiptCaptureFeatureReadiness(): FeatureReadiness {
+  const extraMissing = hasAtLeastOneRefreshToken()
+    ? []
+    : [EMAIL_SUMMARY_REFRESH_TOKEN_HINT];
+
+  return getFeatureReadiness(RECEIPT_CAPTURE_REQUIRED_VARS, extraMissing);
 }
 
 export function getTelegramTestFeatureReadiness(): FeatureReadiness {
@@ -90,6 +100,7 @@ export function getOptionalFeaturesStatus(): OptionalFeaturesStatus {
     emailSummaries: getEmailSummaryFeatureReadiness(),
     telegramAssistant: getTelegramAssistantFeatureReadiness(),
     notionNotes: getNotionNotesFeatureReadiness(),
+    receiptCapture: getReceiptCaptureFeatureReadiness(),
     telegramTest: getTelegramTestFeatureReadiness(),
     telegramWebhookSetup: getTelegramWebhookSetupFeatureReadiness(),
     dailyWeatherReport: getDailyWeatherReportFeatureReadiness(),

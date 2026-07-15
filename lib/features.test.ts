@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   getEmailSummaryFeatureReadiness,
+  getReceiptCaptureFeatureReadiness,
   getOptionalFeaturesStatus,
   hasAnyEnabledFeature,
 } from "./features";
@@ -66,6 +67,20 @@ describe("feature readiness", () => {
   it("reports no enabled features when nothing is configured", () => {
     const status = getOptionalFeaturesStatus();
     expect(hasAnyEnabledFeature(status)).toBe(false);
+  });
+
+  it("enables receipt capture without Telegram configuration", () => {
+    process.env.GOOGLE_CLIENT_ID = "client-id";
+    process.env.GOOGLE_CLIENT_SECRET = "client-secret";
+    process.env.GOOGLE_REFRESH_TOKEN = "refresh-token";
+    process.env.OPENAI_API_KEY = "openai-key";
+    process.env.NOTION_API_KEY = "notion-key";
+    process.env.NOTION_NOTES_PAGE_ID = "page-id";
+
+    expect(getReceiptCaptureFeatureReadiness()).toEqual({
+      enabled: true,
+      missing: [],
+    });
   });
 
   it("reports enabled features when telegram assistant env vars are configured", () => {
