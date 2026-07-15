@@ -3,7 +3,7 @@ import { getConfiguredValue } from "@/lib/config";
 import {
   getConfiguredAccountIds,
   getGmailMessageUrl,
-  listUnreadMessageIds,
+  listMessageIds,
   getMessage,
 } from "@/lib/gmail";
 import {
@@ -62,7 +62,11 @@ export async function GET(request: NextRequest) {
     for (const accountId of accountIds) {
       let ids: string[] = [];
       try {
-        ids = await listUnreadMessageIds(accountId);
+        ids = await listMessageIds(accountId, {
+          // Receipt capture must inspect every message in the lookback period,
+          // regardless of whether Gmail currently marks it as read.
+          includeRead: receiptFeature.enabled,
+        });
       } catch (err) {
         console.error(
           `Gmail list error (account ${accountId}):`,
@@ -79,7 +83,8 @@ export async function GET(request: NextRequest) {
           const summary = await summarizeEmail(email);
           if (!summary) continue;
 
-          if (emailFeature.enabled) {
+          const isUnread = email.labelIds?.includes("UNREAD") ?? false;
+          if (emailFeature.enabled && isUnread) {
             const sent = await sendToTelegram(email, summary);
             if (sent) processed++;
           }

@@ -6,19 +6,20 @@ import {
 } from "./config";
 
 /**
- * Builds Gmail query for filtering unread emails.
+ * Builds a Gmail query for the configured lookback period.
  * Process inbox, social, promotions; skip spam only.
- * Only emails from the last 30 minutes (uses epoch timestamp for precise time filter).
+ * Uses an epoch timestamp for a precise time filter.
  *
  * Env vars:
  * - LABEL_FILTER: restrict to a single label (e.g. IMPORTANT)
  * - EXCLUDE_CATEGORIES: comma-separated categories to skip (e.g. promotions, social)
  */
-export function buildGmailQuery(): string {
+export function buildGmailQuery(options: { includeRead?: boolean } = {}): string {
   const sinceEpoch = Math.floor(
     (Date.now() - EMAIL_LOOKBACK_MINUTES * 60 * 1000) / 1000
   );
-  const base = `is:unread -in:spam after:${sinceEpoch}`;
+  const unreadFilter = options.includeRead ? "" : "is:unread ";
+  const base = `${unreadFilter}-in:spam after:${sinceEpoch}`;
   let query = base;
 
   const categories = getCommaSeparatedConfig("EXCLUDE_CATEGORIES").map((c) =>

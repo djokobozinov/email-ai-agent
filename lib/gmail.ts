@@ -106,8 +106,9 @@ function shouldSummarizeSender(from: string): boolean {
   return allowedSenders.some((allowed) => sender === allowed);
 }
 
-export async function listUnreadMessageIds(
-  accountId: number
+export async function listMessageIds(
+  accountId: number,
+  options: { includeRead?: boolean } = {}
 ): Promise<string[]> {
   const auth = getOAuth2Client(accountId);
   if (!auth) return [];
@@ -121,12 +122,16 @@ export async function listUnreadMessageIds(
 
   const res = await gmail.users.messages.list({
     userId: "me",
-    q: buildGmailQuery(),
+    q: buildGmailQuery(options),
     maxResults: Math.min(maxResults, MAX_EMAILS_PER_RUN_LIMIT),
   });
 
   const ids = (res.data.messages ?? []).map((m) => m.id!);
   return ids.filter(Boolean);
+}
+
+export async function listUnreadMessageIds(accountId: number): Promise<string[]> {
+  return listMessageIds(accountId);
 }
 
 export async function getMessage(

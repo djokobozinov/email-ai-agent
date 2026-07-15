@@ -21,7 +21,49 @@ vi.mock("googleapis", () => ({
   },
 }));
 
-import { getGmailMessageUrl, getMessage } from "./gmail";
+import { getGmailMessageUrl, getMessage, listMessageIds } from "./gmail";
+
+describe("listMessageIds", () => {
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-15T10:30:00.000Z"));
+    process.env = {
+      ...originalEnv,
+      GOOGLE_CLIENT_ID: "client-id",
+      GOOGLE_CLIENT_SECRET: "client-secret",
+      GOOGLE_REFRESH_TOKEN: "refresh-token",
+    };
+    listMock.mockReset();
+    listMock.mockResolvedValue({ data: { messages: [] } });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    process.env = originalEnv;
+  });
+
+  it("filters unread messages for regular email summaries", async () => {
+    await listMessageIds(1);
+
+    expect(listMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        q: "is:unread -in:spam after:1784109600",
+      })
+    );
+  });
+
+  it("scans read and unread messages for receipt capture", async () => {
+    await listMessageIds(1, { includeRead: true });
+
+    expect(listMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        q: "-in:spam after:1784109600",
+      })
+    );
+  });
+});
 
 describe("getGmailMessageUrl", () => {
   it("builds a direct Gmail link for the configured account", () => {

@@ -207,7 +207,7 @@ const howItWorks = [
   {
     title: "Gmail Summaries",
     description:
-      "The agent connects to up to 5 Gmail accounts via OAuth2. It reads unread messages from inbox, social, and promotions, skips spam, and summarizes relevant mail.",
+      "The agent connects to up to 5 Gmail accounts via OAuth2. It summarizes unread mail, scans read and unread mail for receipts within the lookback period, and skips spam.",
     example:
       'A long newsletter becomes: "Q4 Product Launch Recap" - Key features shipped · Beta feedback summary · Next steps.',
   },
@@ -444,7 +444,7 @@ export default function Home() {
               <h3 className="mb-2 font-semibold text-[#3fb950]">Filtering</h3>
               <ul className="space-y-1 text-[#8b949e]">
                 {[
-                  "inbox, social, promotions — unread only",
+                  "unread summaries; read + unread receipt scans",
                   "skips spam",
                   "skips < 5 char emails",
                   "👥 social · 🏷️ promotions",
